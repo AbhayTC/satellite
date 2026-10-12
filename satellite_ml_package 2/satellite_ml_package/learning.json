@@ -1,0 +1,750 @@
+{
+ "method": "Contextual bandit: critic = table of average reward per (score band, trend, action); policy = epsilon-greedy over the critic. Simulated in MESA.",
+ "reward_assumptions": {
+  "maneuver_cost": 2.0,
+  "maneuver_benefit": 10.0,
+  "review_cost": 0.3,
+  "review_benefit": 4.0,
+  "miss_penalty": 20.0
+ },
+ "reward_table": [
+  [
+   0.0,
+   -20.0
+  ],
+  [
+   -0.3,
+   3.7
+  ],
+  [
+   -2.0,
+   8.0
+  ]
+ ],
+ "actions": [
+  "NO_ACTION",
+  "MONITOR",
+  "MANEUVER"
+ ],
+ "split": {
+  "learn_events": 7187,
+  "learn_positives": 126,
+  "heldout_events": 4755,
+  "heldout_positives": 197
+ },
+ "comparison": {
+  "Always NO_ACTION": {
+   "mean_reward": -0.8286014721345951,
+   "maneuvers_per_1000": 0.0,
+   "reviews_per_1000": 0.0,
+   "caught": 0.0,
+   "missed": 197.0
+  },
+  "Always MANEUVER": {
+   "mean_reward": -1.5856992639327023,
+   "maneuvers_per_1000": 1000.0,
+   "reviews_per_1000": 0.0,
+   "caught": 1.0,
+   "missed": 0.0
+  },
+  "Fixed thresholds (our policy)": {
+   "mean_reward": 0.2107465825446898,
+   "maneuvers_per_1000": 43.953732912723446,
+   "reviews_per_1000": 15.352260778128285,
+   "caught": 0.9289340101522843,
+   "missed": 14.0
+  },
+  "Oracle (knows the outcome)": {
+   "mean_reward": 0.3314405888538381,
+   "maneuvers_per_1000": 41.43007360672976,
+   "reviews_per_1000": 0.0,
+   "caught": 1.0,
+   "missed": 0.0
+  },
+  "Learned (mean of 5 seeds)": {
+   "mean_reward": 0.13274447949526813,
+   "maneuvers_per_1000": 38.569926393270244,
+   "reviews_per_1000": 41.219768664563624,
+   "caught": 0.8913705583756345,
+   "missed": 21.4
+  }
+ },
+ "learning_curve": {
+  "step": [
+   0,
+   10,
+   20,
+   30,
+   40,
+   50,
+   60,
+   70,
+   80,
+   90,
+   100,
+   110,
+   120,
+   130,
+   140,
+   150,
+   160,
+   170,
+   180,
+   190,
+   200,
+   210,
+   220,
+   230,
+   240,
+   250,
+   260,
+   270,
+   280,
+   290,
+   300,
+   310,
+   320,
+   330,
+   340,
+   350,
+   360,
+   370,
+   380,
+   390,
+   400,
+   410,
+   420,
+   430,
+   440,
+   450,
+   460,
+   470,
+   480,
+   490,
+   500,
+   510,
+   520,
+   530,
+   540,
+   550,
+   560,
+   570,
+   580,
+   590
+  ],
+  "online_reward": [
+   null,
+   -0.3528,
+   -0.2757,
+   -0.1907,
+   -0.1708,
+   -0.1515,
+   -0.1899,
+   -0.1509,
+   -0.1345,
+   -0.0749,
+   -0.0697,
+   -0.0118,
+   -0.0404,
+   -0.0916,
+   -0.0647,
+   -0.0189,
+   0.0183,
+   0.0014,
+   -0.0171,
+   -0.0269,
+   0.0295,
+   0.0864,
+   0.0494,
+   0.0452,
+   0.0458,
+   0.0557,
+   0.0446,
+   0.055,
+   0.0722,
+   0.0687,
+   0.0193,
+   0.0348,
+   0.0665,
+   0.0332,
+   0.0291,
+   0.0534,
+   0.0553,
+   0.031,
+   0.0481,
+   0.0395,
+   0.0377,
+   0.0375,
+   0.0208,
+   0.0042,
+   0.0433,
+   0.016,
+   0.0522,
+   0.0664,
+   0.0722,
+   0.0238,
+   0.0166,
+   0.0475,
+   0.0288,
+   0.0073,
+   0.011,
+   0.0119,
+   0.0086,
+   0.0464,
+   0.0631,
+   0.0605
+  ],
+  "heldout_reward_mean": [
+   -0.8062,
+   -0.3451,
+   -0.1003,
+   -0.0537,
+   -0.0409,
+   -0.007,
+   0.0207,
+   0.0345,
+   0.0362,
+   0.0552,
+   0.0584,
+   0.0613,
+   0.0718,
+   0.0717,
+   0.0827,
+   0.0832,
+   0.0838,
+   0.0954,
+   0.1053,
+   0.1075,
+   0.1094,
+   0.1093,
+   0.1092,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1128,
+   0.1143,
+   0.116,
+   0.116,
+   0.1158,
+   0.1157,
+   0.127,
+   0.1271,
+   0.128,
+   0.137,
+   0.137,
+   0.1369,
+   0.1369,
+   0.1369,
+   0.1391,
+   0.141,
+   0.141,
+   0.1405,
+   0.1405,
+   0.1418,
+   0.1418,
+   0.1437,
+   0.1432,
+   0.1432,
+   0.1432,
+   0.1432,
+   0.1438,
+   0.1438,
+   0.1438,
+   0.1447,
+   0.1447,
+   0.1447,
+   0.1332,
+   0.1332
+  ],
+  "heldout_reward_min": [
+   -0.8286,
+   -0.7003,
+   -0.1695,
+   -0.1489,
+   -0.1158,
+   -0.1168,
+   -0.0558,
+   -0.0558,
+   -0.058,
+   0.0208,
+   0.0254,
+   0.0254,
+   0.0254,
+   0.0254,
+   0.0254,
+   0.0254,
+   0.0254,
+   0.0254,
+   0.0596,
+   0.0596,
+   0.0596,
+   0.0596,
+   0.0591,
+   0.0591,
+   0.0591,
+   0.0591,
+   0.0591,
+   0.0591,
+   0.0591,
+   0.0591,
+   0.0591,
+   0.0584,
+   0.1025,
+   0.1032,
+   0.1032,
+   0.1155,
+   0.1155,
+   0.1152,
+   0.1152,
+   0.1152,
+   0.1152,
+   0.1152,
+   0.1152,
+   0.1152,
+   0.1152,
+   0.1201,
+   0.1201,
+   0.1237,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.1216,
+   0.0724,
+   0.0724
+  ],
+  "heldout_reward_max": [
+   -0.7167,
+   -0.0268,
+   -0.015,
+   -0.0001,
+   0.0081,
+   0.0905,
+   0.094,
+   0.1025,
+   0.1025,
+   0.1025,
+   0.1111,
+   0.1255,
+   0.1255,
+   0.1255,
+   0.143,
+   0.1352,
+   0.1352,
+   0.1501,
+   0.1501,
+   0.1517,
+   0.1517,
+   0.1517,
+   0.1517,
+   0.1517,
+   0.1517,
+   0.1517,
+   0.1517,
+   0.1517,
+   0.1602,
+   0.1602,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1594,
+   0.1632,
+   0.1632,
+   0.1632,
+   0.1632,
+   0.1632
+  ]
+ },
+ "references": {
+  "fixed": 0.2107465825446898,
+  "always_no_action": -0.8286014721345951,
+  "oracle": 0.3314405888538381
+ },
+ "sensitivity": {
+  "Cheap maneuver (cost 1)": {
+   "fixed_reward": 0.25470031545741323,
+   "learned_reward": 0.1981633368384157,
+   "oracle_reward": 0.3728706624605678,
+   "fixed_maneuvers_per_1000": 43.953732912723446,
+   "learned_maneuvers_per_1000": 42.55169996494918
+  },
+  "Default (cost 2)": {
+   "fixed_reward": 0.2107465825446898,
+   "learned_reward": 0.15656501927795302,
+   "oracle_reward": 0.3314405888538381,
+   "fixed_maneuvers_per_1000": 43.953732912723446,
+   "learned_maneuvers_per_1000": 41.99088678583947
+  },
+  "Expensive maneuver (cost 5)": {
+   "fixed_reward": 0.07888538380651945,
+   "learned_reward": 0.04501927795303189,
+   "oracle_reward": 0.20715036803364878,
+   "fixed_maneuvers_per_1000": 43.953732912723446,
+   "learned_maneuvers_per_1000": 25.166491412548197
+  }
+ },
+ "learned_policy": [
+  {
+   "score_band": "<0.005",
+   "trend": "falling",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    -0.012,
+    -0.3,
+    -2.0
+   ],
+   "visits": 5197
+  },
+  {
+   "score_band": "<0.005",
+   "trend": "flat",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    -0.033,
+    -0.3,
+    -2.0
+   ],
+   "visits": 6935
+  },
+  {
+   "score_band": "<0.005",
+   "trend": "rising",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    -0.011,
+    -0.3,
+    -2.0
+   ],
+   "visits": 1964
+  },
+  {
+   "score_band": "0.005-0.02",
+   "trend": "falling",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    0.0,
+    -0.3,
+    -2.0
+   ],
+   "visits": 72
+  },
+  {
+   "score_band": "0.005-0.02",
+   "trend": "flat",
+   "best_action": "MONITOR",
+   "q_values": [
+    -2.0,
+    -0.126,
+    -2.0
+   ],
+   "visits": 105
+  },
+  {
+   "score_band": "0.005-0.02",
+   "trend": "rising",
+   "best_action": "MONITOR",
+   "q_values": [
+    -2.5,
+    -0.3,
+    -2.0
+   ],
+   "visits": 86
+  },
+  {
+   "score_band": "0.02-0.05",
+   "trend": "falling",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    0.0,
+    -0.3,
+    -2.0
+   ],
+   "visits": 25
+  },
+  {
+   "score_band": "0.02-0.05",
+   "trend": "flat",
+   "best_action": "MONITOR",
+   "q_values": [
+    -5.0,
+    0.5,
+    -2.0
+   ],
+   "visits": 41
+  },
+  {
+   "score_band": "0.02-0.05",
+   "trend": "rising",
+   "best_action": "MONITOR",
+   "q_values": [
+    -6.667,
+    -0.065,
+    -2.0
+   ],
+   "visits": 55
+  },
+  {
+   "score_band": "0.05-0.1",
+   "trend": "falling",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    0.0,
+    -0.3,
+    -2.0
+   ],
+   "visits": 13
+  },
+  {
+   "score_band": "0.05-0.1",
+   "trend": "flat",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    0.0,
+    -0.3,
+    -2.0
+   ],
+   "visits": 20
+  },
+  {
+   "score_band": "0.05-0.1",
+   "trend": "rising",
+   "best_action": "MONITOR",
+   "q_values": [
+    -2.222,
+    0.008,
+    -2.0
+   ],
+   "visits": 24
+  },
+  {
+   "score_band": "0.1-0.2",
+   "trend": "falling",
+   "best_action": "MONITOR",
+   "q_values": [
+    0.0,
+    1.7,
+    -2.0
+   ],
+   "visits": 3
+  },
+  {
+   "score_band": "0.1-0.2",
+   "trend": "flat",
+   "best_action": "MONITOR",
+   "q_values": [
+    -6.667,
+    0.064,
+    -2.0
+   ],
+   "visits": 26
+  },
+  {
+   "score_band": "0.1-0.2",
+   "trend": "rising",
+   "best_action": "MANEUVER",
+   "q_values": [
+    0.0,
+    -0.3,
+    0.5
+   ],
+   "visits": 14
+  },
+  {
+   "score_band": "0.2-0.4",
+   "trend": "falling",
+   "best_action": "MONITOR",
+   "q_values": [
+    -10.0,
+    1.7,
+    -2.0
+   ],
+   "visits": 11
+  },
+  {
+   "score_band": "0.2-0.4",
+   "trend": "flat",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    0.0,
+    -0.3,
+    -2.0
+   ],
+   "visits": 17
+  },
+  {
+   "score_band": "0.2-0.4",
+   "trend": "rising",
+   "best_action": "NO_ACTION",
+   "q_values": [
+    0.0,
+    -0.3,
+    -2.0
+   ],
+   "visits": 17
+  },
+  {
+   "score_band": "0.4-0.6",
+   "trend": "falling",
+   "best_action": "MONITOR",
+   "q_values": [
+    -20.0,
+    0.5,
+    -2.0
+   ],
+   "visits": 7
+  },
+  {
+   "score_band": "0.4-0.6",
+   "trend": "flat",
+   "best_action": "MANEUVER",
+   "q_values": [
+    0.0,
+    0.0,
+    1.125
+   ],
+   "visits": 16
+  },
+  {
+   "score_band": "0.4-0.6",
+   "trend": "rising",
+   "best_action": "MONITOR",
+   "q_values": [
+    -10.0,
+    0.7,
+    -2.0
+   ],
+   "visits": 15
+  },
+  {
+   "score_band": "0.6-0.8",
+   "trend": "falling",
+   "best_action": "MANEUVER",
+   "q_values": [
+    -20.0,
+    -0.3,
+    0.0
+   ],
+   "visits": 2
+  },
+  {
+   "score_band": "0.6-0.8",
+   "trend": "flat",
+   "best_action": "MONITOR",
+   "q_values": [
+    -20.0,
+    -0.089,
+    -2.0
+   ],
+   "visits": 21
+  },
+  {
+   "score_band": "0.6-0.8",
+   "trend": "rising",
+   "best_action": "MONITOR",
+   "q_values": [
+    0.0,
+    0.5,
+    0.0
+   ],
+   "visits": 16
+  },
+  {
+   "score_band": "0.8-0.95",
+   "trend": "falling",
+   "best_action": "MONITOR",
+   "q_values": [
+    0.0,
+    2.367,
+    -2.0
+   ],
+   "visits": 13
+  },
+  {
+   "score_band": "0.8-0.95",
+   "trend": "flat",
+   "best_action": "MANEUVER",
+   "q_values": [
+    0.0,
+    0.0,
+    4.0
+   ],
+   "visits": 30
+  },
+  {
+   "score_band": "0.8-0.95",
+   "trend": "rising",
+   "best_action": "MONITOR",
+   "q_values": [
+    0.0,
+    0.95,
+    0.0
+   ],
+   "visits": 16
+  },
+  {
+   "score_band": ">=0.95",
+   "trend": "falling",
+   "best_action": "MANEUVER",
+   "q_values": [
+    -20.0,
+    3.7,
+    7.231
+   ],
+   "visits": 42
+  },
+  {
+   "score_band": ">=0.95",
+   "trend": "flat",
+   "best_action": "MANEUVER",
+   "q_values": [
+    -20.0,
+    2.367,
+    5.895
+   ],
+   "visits": 99
+  },
+  {
+   "score_band": ">=0.95",
+   "trend": "rising",
+   "best_action": "MANEUVER",
+   "q_values": [
+    -20.0,
+    -0.3,
+    5.059
+   ],
+   "visits": 55
+  }
+ ],
+ "caveats": [
+  "Rewards are assumed costs and benefits, not real outcomes.",
+  "Outcome = final risk >= -6, a proxy for danger, not a real collision.",
+  "Learning happens in simulation on recorded events; the deployed decision policy is unchanged.",
+  "Held-out events come from missions the learner never saw."
+ ]
+}

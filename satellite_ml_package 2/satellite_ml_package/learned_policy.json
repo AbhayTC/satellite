@@ -1,0 +1,332 @@
+[
+ {
+  "score_band": "<0.005",
+  "trend": "falling",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   -0.012,
+   -0.3,
+   -2.0
+  ],
+  "visits": 5197
+ },
+ {
+  "score_band": "<0.005",
+  "trend": "flat",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   -0.033,
+   -0.3,
+   -2.0
+  ],
+  "visits": 6935
+ },
+ {
+  "score_band": "<0.005",
+  "trend": "rising",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   -0.011,
+   -0.3,
+   -2.0
+  ],
+  "visits": 1964
+ },
+ {
+  "score_band": "0.005-0.02",
+  "trend": "falling",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   0.0,
+   -0.3,
+   -2.0
+  ],
+  "visits": 72
+ },
+ {
+  "score_band": "0.005-0.02",
+  "trend": "flat",
+  "best_action": "MONITOR",
+  "q_values": [
+   -2.0,
+   -0.126,
+   -2.0
+  ],
+  "visits": 105
+ },
+ {
+  "score_band": "0.005-0.02",
+  "trend": "rising",
+  "best_action": "MONITOR",
+  "q_values": [
+   -2.5,
+   -0.3,
+   -2.0
+  ],
+  "visits": 86
+ },
+ {
+  "score_band": "0.02-0.05",
+  "trend": "falling",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   0.0,
+   -0.3,
+   -2.0
+  ],
+  "visits": 25
+ },
+ {
+  "score_band": "0.02-0.05",
+  "trend": "flat",
+  "best_action": "MONITOR",
+  "q_values": [
+   -5.0,
+   0.5,
+   -2.0
+  ],
+  "visits": 41
+ },
+ {
+  "score_band": "0.02-0.05",
+  "trend": "rising",
+  "best_action": "MONITOR",
+  "q_values": [
+   -6.667,
+   -0.065,
+   -2.0
+  ],
+  "visits": 55
+ },
+ {
+  "score_band": "0.05-0.1",
+  "trend": "falling",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   0.0,
+   -0.3,
+   -2.0
+  ],
+  "visits": 13
+ },
+ {
+  "score_band": "0.05-0.1",
+  "trend": "flat",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   0.0,
+   -0.3,
+   -2.0
+  ],
+  "visits": 20
+ },
+ {
+  "score_band": "0.05-0.1",
+  "trend": "rising",
+  "best_action": "MONITOR",
+  "q_values": [
+   -2.222,
+   0.008,
+   -2.0
+  ],
+  "visits": 24
+ },
+ {
+  "score_band": "0.1-0.2",
+  "trend": "falling",
+  "best_action": "MONITOR",
+  "q_values": [
+   0.0,
+   1.7,
+   -2.0
+  ],
+  "visits": 3
+ },
+ {
+  "score_band": "0.1-0.2",
+  "trend": "flat",
+  "best_action": "MONITOR",
+  "q_values": [
+   -6.667,
+   0.064,
+   -2.0
+  ],
+  "visits": 26
+ },
+ {
+  "score_band": "0.1-0.2",
+  "trend": "rising",
+  "best_action": "MANEUVER",
+  "q_values": [
+   0.0,
+   -0.3,
+   0.5
+  ],
+  "visits": 14
+ },
+ {
+  "score_band": "0.2-0.4",
+  "trend": "falling",
+  "best_action": "MONITOR",
+  "q_values": [
+   -10.0,
+   1.7,
+   -2.0
+  ],
+  "visits": 11
+ },
+ {
+  "score_band": "0.2-0.4",
+  "trend": "flat",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   0.0,
+   -0.3,
+   -2.0
+  ],
+  "visits": 17
+ },
+ {
+  "score_band": "0.2-0.4",
+  "trend": "rising",
+  "best_action": "NO_ACTION",
+  "q_values": [
+   0.0,
+   -0.3,
+   -2.0
+  ],
+  "visits": 17
+ },
+ {
+  "score_band": "0.4-0.6",
+  "trend": "falling",
+  "best_action": "MONITOR",
+  "q_values": [
+   -20.0,
+   0.5,
+   -2.0
+  ],
+  "visits": 7
+ },
+ {
+  "score_band": "0.4-0.6",
+  "trend": "flat",
+  "best_action": "MANEUVER",
+  "q_values": [
+   0.0,
+   0.0,
+   1.125
+  ],
+  "visits": 16
+ },
+ {
+  "score_band": "0.4-0.6",
+  "trend": "rising",
+  "best_action": "MONITOR",
+  "q_values": [
+   -10.0,
+   0.7,
+   -2.0
+  ],
+  "visits": 15
+ },
+ {
+  "score_band": "0.6-0.8",
+  "trend": "falling",
+  "best_action": "MANEUVER",
+  "q_values": [
+   -20.0,
+   -0.3,
+   0.0
+  ],
+  "visits": 2
+ },
+ {
+  "score_band": "0.6-0.8",
+  "trend": "flat",
+  "best_action": "MONITOR",
+  "q_values": [
+   -20.0,
+   -0.089,
+   -2.0
+  ],
+  "visits": 21
+ },
+ {
+  "score_band": "0.6-0.8",
+  "trend": "rising",
+  "best_action": "MONITOR",
+  "q_values": [
+   0.0,
+   0.5,
+   0.0
+  ],
+  "visits": 16
+ },
+ {
+  "score_band": "0.8-0.95",
+  "trend": "falling",
+  "best_action": "MONITOR",
+  "q_values": [
+   0.0,
+   2.367,
+   -2.0
+  ],
+  "visits": 13
+ },
+ {
+  "score_band": "0.8-0.95",
+  "trend": "flat",
+  "best_action": "MANEUVER",
+  "q_values": [
+   0.0,
+   0.0,
+   4.0
+  ],
+  "visits": 30
+ },
+ {
+  "score_band": "0.8-0.95",
+  "trend": "rising",
+  "best_action": "MONITOR",
+  "q_values": [
+   0.0,
+   0.95,
+   0.0
+  ],
+  "visits": 16
+ },
+ {
+  "score_band": ">=0.95",
+  "trend": "falling",
+  "best_action": "MANEUVER",
+  "q_values": [
+   -20.0,
+   3.7,
+   7.231
+  ],
+  "visits": 42
+ },
+ {
+  "score_band": ">=0.95",
+  "trend": "flat",
+  "best_action": "MANEUVER",
+  "q_values": [
+   -20.0,
+   2.367,
+   5.895
+  ],
+  "visits": 99
+ },
+ {
+  "score_band": ">=0.95",
+  "trend": "rising",
+  "best_action": "MANEUVER",
+  "q_values": [
+   -20.0,
+   -0.3,
+   5.059
+  ],
+  "visits": 55
+ }
+]
