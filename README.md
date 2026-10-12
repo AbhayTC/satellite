@@ -316,13 +316,6 @@ http://localhost:5173
 
 ---
 
-## 📚 Comprehensive Beginner's Guide
-
-For an in-depth reference explaining every mathematical concept, feature calculation, agent workflow, and user journey in clear, beginner-friendly terms, refer to:
-👉 **[`PROJECT_EXPLANATION.txt`](file:///Users/abhaychirayil/Desktop/satellite/PROJECT_EXPLANATION.txt)**
-
----
-
 ## 📄 License & Acknowledgments
 
 - **Dataset**: European Space Agency (ESA) Space Debris Office – Collision Avoidance Challenge.
