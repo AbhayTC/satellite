@@ -171,7 +171,6 @@ satellite/
 │   ├── index.html                      # HTML5 template with Google Fonts
 │   └── README.md                       # Frontend-specific documentation
 │
-├── PROJECT_EXPLANATION.txt              # 📚 Comprehensive beginner-friendly reference bible
 └── README.md                           # 📖 Master repository documentation (this file)
 ```
 
