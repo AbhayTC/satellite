@@ -232,8 +232,14 @@ Rather than an arbitrary 0.5 probability cutoff, decision thresholds are calibra
 
 ### Option A: One-Command Quickstart
 
-The fastest way to launch the full platform:
+#### On Windows:
+Double-click [`start-windows.bat`](file:///c:/Users/aryan/Desktop/AIML/Project/Combine/start-windows.bat) in the project root, or in PowerShell run:
+```powershell
+.\start-windows.ps1
+```
+*(Or from within `satellite_ml_package`, run `.\dev-fullstack.bat` or `.\dev-fullstack.ps1`)*
 
+#### On macOS / Linux:
 ```bash
 # Navigate to satellite_ml_package and execute the fullstack launcher
 cd "satellite_ml_package"

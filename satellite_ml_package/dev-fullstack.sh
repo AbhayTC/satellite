@@ -15,12 +15,18 @@ echo "📁 Frontend: $FRONTEND_DIR"
 echo "📁 Backend:  $BACKEND_DIR"
 
 # 1. Detect Python / Uvicorn
-if [ -x "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3" ]; then
+if [ -x "$BACKEND_DIR/venv/Scripts/python.exe" ]; then
+    UVICORN_CMD="$BACKEND_DIR/venv/Scripts/python.exe -m uvicorn"
+elif [ -x "$BACKEND_DIR/venv/bin/python" ]; then
+    UVICORN_CMD="$BACKEND_DIR/venv/bin/python -m uvicorn"
+elif [ -x "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3" ]; then
     UVICORN_CMD="/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m uvicorn"
 elif command -v uvicorn >/dev/null 2>&1; then
     UVICORN_CMD="uvicorn"
 elif command -v python3 >/dev/null 2>&1; then
     UVICORN_CMD="python3 -m uvicorn"
+elif command -v python >/dev/null 2>&1; then
+    UVICORN_CMD="python -m uvicorn"
 else
     echo "❌ Error: Python 3 / Uvicorn not found. Please install Python 3.11+."
     exit 1

@@ -24,8 +24,10 @@ ENV/
 htmlcov/
 
 # Logs
-logs/stream.jsonl
+logs/
+*/logs/
 *.log
+*.jsonl
 
 # OS metadata
 .DS_Store

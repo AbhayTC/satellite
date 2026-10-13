@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { subscribeLive, fetchEvents } from '../api';
 import type { StreamMessage, StateUpdate, RiskAlert, ManeuverDecision } from '../types';
+import CopyButton from './CopyButton';
+import { IconSearch } from './Icons';
 
 interface EventRow {
   event_id: string;
@@ -22,6 +24,7 @@ const ConjunctionTable: React.FC = () => {
   const [events, setEvents] = useState<Record<string, EventRow>>({});
   const [filterLevel, setFilterLevel] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Initial load from REST endpoint
   useEffect(() => {
@@ -47,7 +50,8 @@ const ConjunctionTable: React.FC = () => {
         });
         setEvents(initialMap);
       })
-      .catch((err) => console.warn('Could not fetch initial events:', err));
+      .catch((err) => console.warn('Could not fetch initial events:', err))
+      .finally(() => setLoading(false));
   }, []);
 
   // Real-time WebSocket streaming updates
@@ -96,141 +100,170 @@ const ConjunctionTable: React.FC = () => {
   const getRiskBadge = (level?: string | null) => {
     switch (level) {
       case 'HIGH':
-        return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', fontWeight: 600 }}>HIGH</span>;
+        return <span style={{ padding: '0.15rem 0.45rem', borderRadius: '2px', background: '#451014', color: '#f87171', border: '1px solid #ef4444', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>HIGH</span>;
       case 'MEDIUM':
-        return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', fontWeight: 600 }}>MEDIUM</span>;
+        return <span style={{ padding: '0.15rem 0.45rem', borderRadius: '2px', background: '#3b2505', color: '#fbbf24', border: '1px solid #f59e0b', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>MEDIUM</span>;
       case 'LOW':
-        return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', fontWeight: 600 }}>LOW</span>;
+        return <span style={{ padding: '0.15rem 0.45rem', borderRadius: '2px', background: '#0a291a', color: '#4ade80', border: '1px solid #10b981', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>LOW</span>;
       default:
-        return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(100, 116, 139, 0.2)', color: '#94a3b8' }}>PENDING</span>;
+        return <span style={{ padding: '0.15rem 0.45rem', borderRadius: '2px', background: '#141a24', color: '#94a3b8', border: '1px solid #283344', fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>PENDING</span>;
     }
   };
 
   const getDecisionBadge = (decision?: string) => {
     switch (decision) {
       case 'MANEUVER':
-        return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: '#dc2626', color: '#fff', fontWeight: 700 }}>MANEUVER</span>;
+        return <span style={{ padding: '0.15rem 0.5rem', borderRadius: '2px', background: '#ef4444', color: '#000', fontWeight: 800, fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>MANEUVER</span>;
       case 'MONITOR':
-        return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: '#d97706', color: '#fff', fontWeight: 600 }}>MONITOR</span>;
+        return <span style={{ padding: '0.15rem 0.5rem', borderRadius: '2px', background: '#f59e0b', color: '#000', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>MONITOR</span>;
       case 'NO_ACTION':
-        return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: '#1e293b', color: '#94a3b8' }}>NO ACTION</span>;
+        return <span style={{ padding: '0.15rem 0.5rem', borderRadius: '2px', background: '#141a24', color: '#94a3b8', border: '1px solid #283344', fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>NO_ACTION</span>;
       default:
-        return <span style={{ color: 'var(--text-muted)' }}>—</span>;
+        return <span style={{ color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>N/A</span>;
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>Live Conjunction Events</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Streaming real-time Collision Data Messages (CDMs) and agent risk decisions.
-          </p>
+          <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
+            TELEMETRY_FEED // ACTIVE_CHANNELS: {rows.length}
+          </div>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
+            Live Conjunction Event Stream
+          </h2>
         </div>
 
-        {/* Filter controls */}
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <input
-            type="text"
-            placeholder="Search Event ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid #30363d',
-              color: 'var(--text-primary)',
-              padding: '0.45rem 0.75rem',
-              borderRadius: '4px',
-              fontSize: '0.85rem'
-            }}
-          />
+        {/* Filter & Search controls */}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+              <IconSearch size={12} />
+            </span>
+            <input
+              type="text"
+              placeholder="FILTER EVENT ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                background: '#090d14',
+                border: '1px solid var(--border-strong)',
+                color: 'var(--text-primary)',
+                padding: '0.35rem 0.65rem 0.35rem 1.8rem',
+                borderRadius: '2px',
+                fontSize: '0.78rem',
+                fontFamily: 'var(--font-mono)',
+                width: '180px',
+              }}
+            />
+          </div>
+
           <select
             value={filterLevel}
             onChange={(e) => setFilterLevel(e.target.value)}
             style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid #30363d',
+              background: '#090d14',
+              border: '1px solid var(--border-strong)',
               color: 'var(--text-primary)',
-              padding: '0.45rem 0.75rem',
-              borderRadius: '4px',
-              fontSize: '0.85rem'
+              padding: '0.35rem 0.65rem',
+              borderRadius: '2px',
+              fontSize: '0.78rem',
+              fontFamily: 'var(--font-mono)',
+              cursor: 'pointer',
             }}
           >
-            <option value="ALL">All Risk Levels</option>
-            <option value="HIGH">High Risk</option>
-            <option value="MEDIUM">Medium Risk</option>
-            <option value="LOW">Low Risk</option>
+            <option value="ALL">FILTER: ALL LEVELS</option>
+            <option value="HIGH">FILTER: HIGH RISK</option>
+            <option value="MEDIUM">FILTER: MEDIUM RISK</option>
+            <option value="LOW">FILTER: LOW RISK</option>
           </select>
         </div>
       </div>
 
-      {/* Events Table */}
-      <div style={{ background: 'var(--bg-surface)', borderRadius: '6px', border: '1px solid #21262d', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
-          <thead>
-            <tr style={{ background: '#0d1117', borderBottom: '1px solid #21262d', color: 'var(--text-muted)' }}>
-              <th style={{ padding: '0.75rem 1rem' }}>EVENT ID</th>
-              <th style={{ padding: '0.75rem 1rem' }}>STEP</th>
-              <th style={{ padding: '0.75rem 1rem' }}>TIME TO TCA</th>
-              <th style={{ padding: '0.75rem 1rem' }}>MISS DISTANCE</th>
-              <th style={{ padding: '0.75rem 1rem' }}>LOG10(Pc)</th>
-              <th style={{ padding: '0.75rem 1rem' }}>RISK SCORE</th>
-              <th style={{ padding: '0.75rem 1rem' }}>RISK LEVEL</th>
-              <th style={{ padding: '0.75rem 1rem' }}>PHASE</th>
-              <th style={{ padding: '0.75rem 1rem' }}>DECISION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={9} style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  No active events yet. Click <strong>▶ Play</strong> in the left sidebar to start replaying CDM conjunctions!
-                </td>
+      {/* Events Table with Sticky Header */}
+      <div style={{ background: 'var(--bg-surface)', borderRadius: '2px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto', maxHeight: '72vh' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+            <thead className="sticky-header">
+              <tr style={{ borderBottom: '1px solid var(--border-strong)', color: 'var(--text-muted)', background: 'var(--bg-surface-elevated)' }}>
+                <th style={{ padding: '0.65rem 0.85rem' }}>EVENT ID</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>STEP</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>TIME TO TCA</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>MISS DIST</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>LOG10(Pc)</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>RISK SCORE</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>RISK LEVEL</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>PHASE</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>DECISION</th>
               </tr>
-            ) : (
-              rows.map((row) => (
-                <tr
-                  key={row.event_id}
-                  style={{
-                    borderBottom: '1px solid #161b22',
-                    transition: 'background 0.1s ease',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#161b22')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-number)', fontWeight: 600, color: 'var(--accent-amber)' }}>
-                    {row.event_id}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-number)' }}>
-                    {row.step !== undefined ? `${row.step} / ${row.n_steps ?? '?'}` : '—'}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-number)' }}>
-                    {row.time_to_tca_hours !== undefined ? `${row.time_to_tca_hours.toFixed(2)}h` : '—'}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-number)' }}>
-                    {row.miss_distance_m !== undefined ? `${Math.round(row.miss_distance_m).toLocaleString()} m` : '—'}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-number)' }}>
-                    {row.log10_pc !== undefined ? row.log10_pc.toFixed(2) : '—'}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontFamily: 'var(--font-number)', fontWeight: 600 }}>
-                    {row.risk_score !== undefined && row.risk_score !== null ? row.risk_score.toFixed(4) : '—'}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem' }}>
-                    {getRiskBadge(row.risk_level)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {row.phase ?? '—'}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem' }}>
-                    {getDecisionBadge(row.decision)}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={9} style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="radar-spinner" />
+                      <span>INITIALIZING SYNTHETIC TELEMETRY INGESTION...</span>
+                    </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    {searchTerm ? (
+                      `NO CONJUNCTION EVENT MATCHING "${searchTerm.toUpperCase()}".`
+                    ) : (
+                      'NO ACTIVE CONJUNCTION TRACKS. CLICK [PLAY] ON SIDEBAR CONTROLLER TO START CDM STREAM.'
+                    )}
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row) => (
+                  <tr
+                    key={row.event_id}
+                    style={{
+                      borderBottom: '1px solid #131924',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#121824')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <td style={{ padding: '0.55rem 0.85rem', fontWeight: 600, color: 'var(--accent-primary)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>{row.event_id}</span>
+                        <CopyButton text={row.event_id} title="Copy Event ID" style={{ padding: '0.15rem 0.35rem', fontSize: '0.68rem' }} />
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem' }}>
+                      {row.step !== undefined ? `${row.step}/${row.n_steps ?? '?'}` : 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem' }}>
+                      {row.time_to_tca_hours !== undefined ? `${row.time_to_tca_hours.toFixed(2)}h` : 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem' }}>
+                      {row.miss_distance_m !== undefined ? `${Math.round(row.miss_distance_m).toLocaleString()} m` : 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem' }}>
+                      {row.log10_pc !== undefined ? row.log10_pc.toFixed(2) : 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem', fontWeight: 600, color: row.risk_score && row.risk_score > 0.65 ? '#ef4444' : 'inherit' }}>
+                      {row.risk_score !== undefined && row.risk_score !== null ? row.risk_score.toFixed(4) : 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem' }}>
+                      {getRiskBadge(row.risk_level)}
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem', color: 'var(--text-muted)' }}>
+                      {row.phase ?? 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.55rem 0.85rem' }}>
+                      {getDecisionBadge(row.decision)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

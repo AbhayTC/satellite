@@ -10,6 +10,7 @@ import type {
   HealthResponse,
   PredictRequest,
   PredictResult,
+  CdmInputRow,
   SimulationFramesResponse,
 } from './types';
 
@@ -182,9 +183,9 @@ export const fetchPredictInfo = async (): Promise<Record<string, any>> => {
 };
 
 /** Preset CDM scenarios */
-export const fetchPredictPresets = async (): Promise<any[]> => {
+export const fetchPredictPresets = async (): Promise<Record<string, CdmInputRow[]>> => {
   const res = await fetch(`${API_BASE}/predict/presets`);
-  return handleResponse<any[]>(res);
+  return handleResponse<Record<string, CdmInputRow[]>>(res);
 };
 
 /** Full learning agent results */

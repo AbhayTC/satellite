@@ -1,17 +1,57 @@
-/* Mission‑control design system */
+/* ==============================================================================
+   ESA Conjunction Assessment & Mission Operations Console
+   Aerospace Engineering Design System (Zero-Vibecoded Standard)
+   ============================================================================== */
+
 :root {
-  --bg-primary: #0a0a0a;            /* near‑black */
-  --bg-surface: #111418;           /* dark blue‑grey */
-  --text-primary: #e0e0e0;         /* light grey */
-  --text-muted: #777777;
-  --accent-amber: #ffb400;         /* warm amber for alerts */
-  --accent-blue: #4da6ff;          /* cool neutral accent */
-  --border-hairline: 1px solid #222;
-  --font-label: 'Space Grotesk', sans-serif;
-  --font-number: 'JetBrains Mono', monospace;
+  /* High-Contrast Technical Color Tokens */
+  --bg-primary: #07090e;
+  --bg-surface: #0e121a;
+  --bg-surface-elevated: #151a24;
+  --bg-panel: #111621;
+
+  /* Crisp High-Contrast Typography */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  /* Functional Telemetry Status Indicators (Not Decorative Aesthetics) */
+  --accent-primary: #ffb400;
+  --accent-amber: #ffb400;
+  --accent-cyan: #38bdf8;
+  --accent-emerald: #10b981;
+  --accent-rose: #ef4444;
+
+  /* Sharp Industrial 1px Borders */
+  --border-subtle: #1e2634;
+  --border-strong: #2d3848;
+  --border-hairline: 1px solid #1e2634;
+
+  /* Typography Stacks (No Generic Inter, No Space Grotesk, No Serifs) */
+  --font-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', Consolas, monospace;
 }
 
-/* Global resets */
+/* Theme: Cyber Cyan */
+[data-theme='cyan'] {
+  --bg-primary: #05080e;
+  --bg-surface: #0a111c;
+  --bg-surface-elevated: #101a2b;
+  --bg-panel: #0d1524;
+  --accent-primary: #00e5ff;
+}
+
+/* Theme: Neon Emerald */
+[data-theme='emerald'] {
+  --bg-primary: #040907;
+  --bg-surface: #08140f;
+  --bg-surface-elevated: #0d1e17;
+  --bg-panel: #0a1812;
+  --accent-primary: #10b981;
+}
+
+/* Global Resets */
 *,
 *::before,
 *::after {
@@ -25,25 +65,200 @@ html, body, #root {
   width: 100%;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-label);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Utility classes */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-.overflow-auto { overflow: auto; }
-.m-2 { margin: 0.5rem; }
-.p-2 { padding: 0.5rem; }
-.rounded { border-radius: 4px; }
-.border { border: var(--border-hairline); }
-.bg-surface { background: var(--bg-surface); }
-.text-amber { color: var(--accent-amber); }
-.text-blue { color: var(--accent-blue); }
-.text-muted { color: var(--text-muted); }
-.hover\:bg-surface:hover { background: var(--bg-surface); }
-.transition { transition: all 0.2s ease; }
-.cursor-pointer { cursor: pointer; }
+/* High-Precision Technical Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Accessible Skip Link */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: var(--accent-primary);
+  color: #000;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 0.5rem 1rem;
+  border-radius: 0px;
+  z-index: 10000;
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: top 0.1s ease;
+}
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid #fff;
+}
+
+/* Scroll Progress Bar (Solid Functional Line, No Purple/Blue Gradient) */
+.scroll-progress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  z-index: 9999;
+  pointer-events: none;
+}
+.scroll-progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  transition: width 0.05s linear;
+}
+
+/* Sticky Headers (Solid Opaque, No Frosted Glassmorphism) */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg-surface-elevated);
+}
+
+/* Scroll to Top Button (Precise Angular Tooling) */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 900;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.1s ease, border-color 0.1s ease;
+}
+.scroll-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+}
+.scroll-top-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Telemetry Status Beacon */
+@keyframes telemetryPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.live-beacon {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  display: inline-block;
+  animation: telemetryPulse 1.6s infinite;
+}
+
+/* Tactical Loading Spinner */
+@keyframes spinRadar {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.radar-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spinRadar 0.65s linear infinite;
+  display: inline-block;
+}
+
+/* Snappy, Tactical Button Hover (No Gimmicky Fades) */
+button, select, input {
+  font-family: inherit;
+  transition: background 0.08s ease, border-color 0.08s ease, color 0.08s ease;
+}
+button:hover {
+  border-color: var(--border-strong);
+}
+
+/* Monospace Utilities */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Clean Print Stylesheet */
+@media print {
+  body, html, #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    height: auto !important;
+    font-family: 'Courier New', monospace !important;
+  }
+
+  nav,
+  .print-hide,
+  .scroll-top-btn,
+  .scroll-progress-container,
+  .cookie-banner,
+  .mission-support-drawer,
+  button,
+  select,
+  input {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    color: #000000 !important;
+  }
+
+  th, td {
+    border: 1px solid #444444 !important;
+    padding: 6px 8px !important;
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  th {
+    background-color: #eeeeee !important;
+    font-weight: bold !important;
+  }
+
+  main::before {
+    content: "EUROPEAN SPACE AGENCY (ESA) - CONJUNCTION RISK ASSESSMENT AUDIT LOG";
+    display: block;
+    font-size: 13pt;
+    font-weight: bold;
+    margin-bottom: 10pt;
+    border-bottom: 1.5pt solid #000;
+    padding-bottom: 3pt;
+  }
+}
