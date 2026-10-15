@@ -50,12 +50,16 @@ def _make_row(**kwargs) -> CdmRow:
         relative_speed_ms=7500.0,
         log10_pc=-8.0,
         collision_probability=1e-8,
-        risk_score=0.1,
+        rule_points=1,
+        risk_score=0.0833,
         risk_level="LOW",
         is_decision_point=False,
         phase="EARLY_WATCH",
         decision="NO_ACTION",
         top_drivers=None,
+        maneuver_plan=None,
+        alert_route=None,
+        ml_score=0.1,
     )
     defaults.update(kwargs)
     return CdmRow(**defaults)
@@ -193,12 +197,37 @@ class TestManeuverInvariant:
         )
 
     @pytest.mark.asyncio
+    async def test_maneuver_downgraded_when_not_decision_point(self):
+        """Before the decision point (is_decision_point=False), MANEUVER is downgraded to MONITOR."""
+        row = _make_row(
+            phase="DECISION",
+            decision="MANEUVER",
+            is_decision_point=False,  # Not decision point
+        )
+        state_msg = _make_state_msg(row)
+        risk_msg  = _make_risk_msg(row)
+
+        in_q  = asyncio.Queue()
+        out_q = asyncio.Queue()
+        stop  = asyncio.Event()
+
+        await in_q.put((row, state_msg, risk_msg))
+        await in_q.put(None)
+
+        await maneuver_agent(in_q, out_q, stop_event=stop)
+
+        result = await out_q.get()
+        _, _, decision_msg = result
+        assert decision_msg.payload["decision"] == "MONITOR"
+
+    @pytest.mark.asyncio
     async def test_maneuver_allowed_on_decision_row(self):
         """MANEUVER on a DECISION row must be passed through unchanged."""
         row = _make_row(
             phase="DECISION",
             decision="MANEUVER",
             is_decision_point=True,
+            rule_points=8,
         )
         state_msg = _make_state_msg(row)
         risk_msg  = _make_risk_msg(row)
@@ -215,6 +244,48 @@ class TestManeuverInvariant:
         result = await out_q.get()
         _, _, decision_msg = result
         assert decision_msg.payload["decision"] == "MANEUVER"
+        assert "rule points" in decision_msg.payload["rationale"]
+
+    @pytest.mark.asyncio
+    async def test_rationale_refine_tracking_first_when_burn_not_needed(self):
+        """If burn_needed is false, the rationale states to refine tracking first."""
+        from backend.core.models import ManeuverPlan
+        plan = ManeuverPlan(
+            d0_m=3504.0,
+            d_safe_m=2000.0,
+            steps=9,
+            step_hours=6.0,
+            feasible=True,
+            burn_needed=False,
+            burns=[],
+            total_cost=0.0,
+            fuel_proxy=0.0,
+            final_separation_m=3504.0,
+            note="Refine tracking before burn",
+        )
+        row = _make_row(
+            phase="DECISION",
+            decision="MANEUVER",
+            is_decision_point=True,
+            rule_points=7,
+            maneuver_plan=plan,
+        )
+        state_msg = _make_state_msg(row)
+        risk_msg  = _make_risk_msg(row)
+
+        in_q  = asyncio.Queue()
+        out_q = asyncio.Queue()
+        stop  = asyncio.Event()
+
+        await in_q.put((row, state_msg, risk_msg))
+        await in_q.put(None)
+
+        await maneuver_agent(in_q, out_q, stop_event=stop)
+
+        result = await out_q.get()
+        _, _, decision_msg = result
+        assert "refine tracking first, no burn needed" in decision_msg.payload["rationale"].lower()
+
 
 
 # =============================================================================
@@ -244,6 +315,20 @@ class TestPredictEndpoint:
         body = resp.json()
         assert "risk_level" in body
         assert "risk_score" in body
+
+    def test_predict_returns_rule_engine_primary_and_ml_benchmark(self):
+        resp = client.post("/predict", json={"history": [VALID_ROW]})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "points" in body
+        assert "max_points" in body
+        assert body["max_points"] == 12
+        assert "drivers" in body
+        assert "ml_benchmark" in body
+        assert "ml_score" in body
+        assert "decision_if_final" in body
+        assert body["ml_benchmark"]["label"] == "LightGBM Benchmark (Comparison Only)"
+
 
     def test_out_of_range_risk_returns_422(self):
         """risk must be in [-30, 0]; 1.0 is out of range → 422."""
@@ -339,6 +424,40 @@ class TestTopDriversParsing:
         parsed = CdmRow(**row_dict)
         assert parsed.top_drivers is None
 
+    def test_maneuver_plan_json_parsed(self):
+        plan_dict = {
+            "d0_m": 246.0,
+            "d_safe_m": 2000.0,
+            "steps": 8,
+            "step_hours": 6.0,
+            "feasible": True,
+            "burn_needed": True,
+            "burns": [{"step": 0, "hours_before_tca": 49.5, "move_m": 1000.0, "fuel_proxy": 0.889}],
+            "total_cost": 3.089,
+            "fuel_proxy": 1.889,
+            "final_separation_m": 2246.0,
+            "note": "Schematic plan along the miss vector."
+        }
+        row = _make_row(maneuver_plan=json.dumps(plan_dict))
+        assert row.maneuver_plan is not None
+        assert row.maneuver_plan.burn_needed is True
+        assert len(row.maneuver_plan.burns) == 1
+
+    def test_alert_route_json_parsed(self):
+        route_dict = {
+            "reachable": True,
+            "path": ["S6", "S7", "G0"],
+            "hops": 2,
+            "latency_ms": 32.2,
+            "baseline_wait_s": 414.8,
+            "direct_visible": False,
+        }
+        row = _make_row(alert_route=json.dumps(route_dict))
+        assert row.alert_route is not None
+        assert row.alert_route.hops == 2
+        assert row.alert_route.latency_ms == 32.2
+
+
 
 # =============================================================================
 # (f) /simulation/frames slice bounds and missing file
@@ -425,3 +544,31 @@ class TestLearningEndpoint:
         # Each row should have score_band, trend, best_action, q_values, visits
         for key in ("score_band", "trend", "best_action", "q_values", "visits"):
             assert key in row, f"Missing key '{key}' in policy row"
+
+
+# =============================================================================
+# (h) /rules and /policy endpoints
+# =============================================================================
+
+class TestRulesAndPolicyEndpoints:
+
+    def test_rules_returns_200_and_expected_sections(self):
+        resp = client.get("/rules")
+        assert resp.status_code == 200
+        body = resp.json()
+        for k in ("params", "thresholds", "targets", "cv_table", "sweep", "tiers"):
+            assert k in body, f"Missing key {k} in /rules"
+        assert body["thresholds"]["review"] == 3
+        assert body["thresholds"]["maneuver"] == 6
+
+    def test_policy_describes_tiers(self):
+        resp = client.get("/policy")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "tiers" in body
+        assert "thresholds" in body
+        assert "review" in body
+        assert "maneuver" in body
+        assert body["thresholds"]["review"] == 3
+        assert body["thresholds"]["maneuver"] == 6
+

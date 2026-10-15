@@ -50,6 +50,8 @@ async def risk_agent(
             risk_level=row.risk_level,
             phase=row.phase,
             top_drivers=row.top_drivers,
+            rule_points=row.rule_points,
+            ml_score=row.ml_score,
         )
         try:
             msg = StreamMessage(

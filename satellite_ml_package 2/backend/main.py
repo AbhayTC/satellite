@@ -36,6 +36,7 @@ from backend.core.config import (
     FIGS_DIR,
     METRICS_FILE,
     POLICY_FILE,
+    RULES_FILE,
 )
 from backend.agents.orchestrator import ReplayOrchestrator
 from backend.api.calculator import router as calc_router
@@ -191,6 +192,13 @@ async def health():
 
 # ── Static data files ─────────────────────────────────────────────────────────
 
+@app.get("/rules", tags=["data"])
+async def get_rules():
+    """Return the rules engine configuration (rules.json)."""
+    with RULES_FILE.open(encoding="utf-8") as fh:
+        return json.load(fh)
+
+
 @app.get("/metrics", tags=["data"])
 async def get_metrics():
     with METRICS_FILE.open(encoding="utf-8") as fh:
@@ -199,5 +207,31 @@ async def get_metrics():
 
 @app.get("/policy", tags=["data"])
 async def get_policy():
+    """Return decision policy describing rule tiers and thresholds."""
+    if RULES_FILE.exists():
+        with RULES_FILE.open(encoding="utf-8") as fh:
+            rules_data = json.load(fh)
+        return {
+            "method": rules_data.get("method"),
+            "max_points": rules_data.get("max_points", 12),
+            "thresholds": rules_data.get("thresholds", {"review": 3, "maneuver": 6}),
+            "tiers": rules_data.get("tiers", {}),
+            "targets": rules_data.get("targets", {}),
+            "review": {
+                "threshold_points": rules_data.get("thresholds", {}).get("review", 3),
+                "action": "MONITOR",
+                "stats": rules_data.get("tiers", {}).get("review", {}),
+            },
+            "maneuver": {
+                "threshold_points": rules_data.get("thresholds", {}).get("maneuver", 6),
+                "action": "MANEUVER",
+                "stats": rules_data.get("tiers", {}).get("maneuver", {}),
+            },
+            "lite": {
+                "threshold_review": 0.2003,
+                "threshold_maneuver": 0.6575,
+                "label": "LightGBM Benchmark (Comparison Only)",
+            },
+        }
     with POLICY_FILE.open(encoding="utf-8") as fh:
         return json.load(fh)

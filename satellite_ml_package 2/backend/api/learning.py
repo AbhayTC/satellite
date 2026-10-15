@@ -55,13 +55,13 @@ LEARNING_KEYS = {
 
 @router.get("/learning")
 async def get_learning():
-    """Return the full learning.json document."""
+    """Return the contextual bandit learning agent extension document."""
     return _load_learning()
 
 
 @router.get("/learning/policy")
 async def get_learned_policy():
-    """Return the learned Q-table policy (list of 30 rows)."""
+    """Return the learned contextual bandit extension policy."""
     return _load_learned_policy()
 
 

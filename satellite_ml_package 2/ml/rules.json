@@ -1,0 +1,172 @@
+{
+ "method": "Points system with fixed rules; only the two tier thresholds are calibrated on the training events.",
+ "params": {
+  "level_floor": -8.0,
+  "level_step": 0.5,
+  "level_max": 8,
+  "peak_threshold": -6.0,
+  "peak_bonus": 2,
+  "trend_unit": 0.3,
+  "trend_max": 2
+ },
+ "max_points": 12,
+ "thresholds": {
+  "review": 3,
+  "maneuver": 6
+ },
+ "targets": {
+  "review": 0.95,
+  "maneuver": 0.8
+ },
+ "cv_table": [
+  {
+   "target_recall": 0.8,
+   "rule_points_threshold": 6,
+   "rule_recall": 0.929,
+   "rule_precision": 0.514,
+   "rule_missed": 23,
+   "rule_flagged": 584,
+   "latest_risk_only_precision": 0.527,
+   "ml_precision": 0.481,
+   "ml_missed_at_same_recall": 23
+  },
+  {
+   "target_recall": 0.9,
+   "rule_points_threshold": 6,
+   "rule_recall": 0.929,
+   "rule_precision": 0.514,
+   "rule_missed": 23,
+   "rule_flagged": 584,
+   "latest_risk_only_precision": 0.527,
+   "ml_precision": 0.481,
+   "ml_missed_at_same_recall": 23
+  },
+  {
+   "target_recall": 0.95,
+   "rule_points_threshold": 3,
+   "rule_recall": 0.944,
+   "rule_precision": 0.306,
+   "rule_missed": 18,
+   "rule_flagged": 996,
+   "latest_risk_only_precision": 0.421,
+   "ml_precision": 0.42,
+   "ml_missed_at_same_recall": 18
+  },
+  {
+   "target_recall": 0.98,
+   "rule_points_threshold": 2,
+   "rule_recall": 0.978,
+   "rule_precision": 0.094,
+   "rule_missed": 7,
+   "rule_flagged": 3358,
+   "latest_risk_only_precision": 0.118,
+   "ml_precision": 0.092,
+   "ml_missed_at_same_recall": 7
+  }
+ ],
+ "sweep": [
+  {
+   "points_at_least": 0,
+   "flagged": 11942,
+   "recall": 1.0,
+   "precision": 0.027,
+   "missed": 0
+  },
+  {
+   "points_at_least": 1,
+   "flagged": 3706,
+   "recall": 0.985,
+   "precision": 0.086,
+   "missed": 5
+  },
+  {
+   "points_at_least": 2,
+   "flagged": 3216,
+   "recall": 0.978,
+   "precision": 0.098,
+   "missed": 7
+  },
+  {
+   "points_at_least": 3,
+   "flagged": 1237,
+   "recall": 0.96,
+   "precision": 0.251,
+   "missed": 13
+  },
+  {
+   "points_at_least": 4,
+   "flagged": 916,
+   "recall": 0.941,
+   "precision": 0.332,
+   "missed": 19
+  },
+  {
+   "points_at_least": 5,
+   "flagged": 720,
+   "recall": 0.941,
+   "precision": 0.422,
+   "missed": 19
+  },
+  {
+   "points_at_least": 6,
+   "flagged": 584,
+   "recall": 0.929,
+   "precision": 0.514,
+   "missed": 23
+  },
+  {
+   "points_at_least": 7,
+   "flagged": 391,
+   "recall": 0.582,
+   "precision": 0.481,
+   "missed": 135
+  },
+  {
+   "points_at_least": 8,
+   "flagged": 248,
+   "recall": 0.35,
+   "precision": 0.456,
+   "missed": 210
+  },
+  {
+   "points_at_least": 9,
+   "flagged": 124,
+   "recall": 0.142,
+   "precision": 0.371,
+   "missed": 277
+  },
+  {
+   "points_at_least": 10,
+   "flagged": 61,
+   "recall": 0.059,
+   "precision": 0.311,
+   "missed": 304
+  },
+  {
+   "points_at_least": 11,
+   "flagged": 20,
+   "recall": 0.025,
+   "precision": 0.4,
+   "missed": 315
+  },
+  {
+   "points_at_least": 12,
+   "flagged": 8,
+   "recall": 0.009,
+   "precision": 0.375,
+   "missed": 320
+  }
+ ],
+ "tiers": {
+  "review": {
+   "recall": 0.96,
+   "precision": 0.251,
+   "flagged": 1237
+  },
+  "maneuver": {
+   "recall": 0.929,
+   "precision": 0.514,
+   "flagged": 584
+  }
+ }
+}

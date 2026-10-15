@@ -11,8 +11,9 @@ ML_DIR     = _ROOT / "ml"
 FIGS_DIR   = DATA_DIR / "figs"
 LOGS_DIR   = _ROOT / "logs"
 
-REPLAY_DEMO_FILE = DATA_DIR / "replay_demo_v3.json"
-REPLAY_ALL_FILE  = DATA_DIR / "replay_all_v3.csv"
+REPLAY_DEMO_FILE = DATA_DIR / "replay_demo_v4.json"
+REPLAY_ALL_FILE  = DATA_DIR / "replay_all_v4.csv"
+RULES_FILE       = ML_DIR / "rules.json"
 METRICS_FILE     = DATA_DIR / "metrics.json"
 POLICY_FILE      = DATA_DIR / "policy.json"
 LEARNING_FILE    = DATA_DIR / "learning.json"
@@ -22,8 +23,8 @@ SIM_FRAMES_FILE  = DATA_DIR / "sim_frames.json"
 STREAM_LOG_FILE  = LOGS_DIR / "stream.jsonl"
 
 # ── Replay settings ───────────────────────────────────────────────────────────
-# "demo" → replay_demo_v3.json (19 events)
-# "all"  → replay_all_v3.csv (2,167 events)
+# "demo" → replay_demo_v4.json (19 events)
+# "all"  → replay_all_v4.csv (2,167 events)
 REPLAY_SOURCE: str = os.environ.get("REPLAY_SOURCE", "demo")
 
 # Seconds of wall-clock time between each synthetic CDM "tick" during replay

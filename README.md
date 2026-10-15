@@ -1,328 +1,188 @@
-# 🛰️ Autonomous Satellite Collision Risk Prediction & Mission Control Platform
+# Satellite Collision-Risk Pipeline and Mission Control
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111%2B-009688.svg)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg)](https://www.typescriptlang.org/)
-[![Three.js](https://img.shields.io/badge/Three.js-WebGL-black.svg)](https://threejs.org/)
-[![LightGBM](https://img.shields.io/badge/Model-LightGBM-brightgreen.svg)](https://lightgbm.readthedocs.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+A multi-agent pipeline that reads ESA Conjunction Data Messages (CDMs), scores collision risk with a **transparent rule-based engine**, plans a schematic avoidance maneuver and an alert route with **Dijkstra's algorithm**, and shows everything in a live dashboard. A LightGBM model is kept **only as a benchmark** to compare against the rules.
 
-An end-to-end aerospace machine learning and multi-agent mission control platform designed to predict orbital conjunction risks, eliminate costly false alarms, and autonomously recommend collision avoidance maneuvers using **European Space Agency (ESA) Conjunction Data Messages (CDMs)**.
+Dataset: ESA Collision Avoidance Challenge (Kaggle: `shadmanrohan/collisionavoidancechallenge`).
+
+> **Project status.** The notebook has produced the rule engine, planner, `rules.json` and the v4 replay files. Wiring the new fields (`rule_points`, `maneuver_plan`, `alert_route`, `ml_score`) into the FastAPI backend and React frontend is in progress. Files marked **(new)** below are the notebook outputs that the backend and frontend must pick up.
 
 ---
 
-## 📖 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Repository Structure](#-repository-structure)
-- [Machine Learning & Decision Engine](#-machine-learning--decision-engine)
-- [Model Benchmark Comparison](#-model-benchmark-comparison)
-- [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Option A: One-Command Quickstart](#option-a-one-command-quickstart)
-  - [Option B: Manual Setup (Backend & Frontend)](#option-b-manual-setup-backend--frontend)
-- [API & WebSocket Reference](#-api--websocket-reference)
-- [Operational Decisions & Threshold Policy](#-operational-decisions--threshold-policy)
-- [Comprehensive Beginner's Guide](#-comprehensive-beginners-guide)
-- [License & Acknowledgments](#-license--acknowledgments)
+## 1. The problem
+
+Operators receive many CDMs, and most early alarms fade before closest approach. Maneuvering costs fuel; ignoring a real threat risks a collision. In the training data only **323 of 11,942 scorable events (2.7%)** end up high-risk, so a model that always says "safe" is 97.3% accurate. **Accuracy is therefore not used as the headline metric.** We report recall, precision, PR-AUC and balanced accuracy.
+
+**Label.** An event is high-risk if its final CDM has log10 Pc ≥ -6. Only CDMs at least 2 days before closest approach are used as inputs (the decision-point rule).
 
 ---
 
-## 🔭 Project Overview
+## 2. Approach
 
-Over 130 million pieces of space debris travel at orbital speeds (~7.5 km/s or 27,000 km/h) in Low Earth Orbit (LEO). At these hypervelocities, even a millimeter-sized fragment carries enough kinetic energy to destroy an active operational satellite.
+### 2.1 Rule-based risk engine (main approach)
+A points system, no machine learning (`rule_engine.py`, **new**):
 
-Satellite operators receive thousands of alert messages called **Conjunction Data Messages (CDMs)** from radar tracking stations. However, operators face a critical dilemma:
-- **Firing thrusters (maneuvering)** consumes irreplaceable propellant, cutting years off a satellite's operational life and costing millions of dollars.
-- **Ignoring an alert** risks a catastrophic hypervelocity collision, triggering cascading space debris ("Kessler Syndrome").
-- **Over 97% of raw conjunction alerts are false alarms** caused by initial radar sensor uncertainty that naturally drifts away before closest approach.
+| Rule | Points |
+|---|---|
+| Latest log10 Pc | 1 point per 0.5 decade above -8 (max 8) |
+| Highest log10 Pc so far ≥ -6 | +2 |
+| Rising trend over the last 3 CDMs | 1 point per 0.3 decades/day (max 2) |
 
-### The Solution
-This platform bridges orbital mechanics and machine learning:
-1. **Machine Learning Risk Prediction**: A gradient-boosted decision tree model (LightGBM) trained on 11,942 ESA conjunction events that predicts days before closest approach whether an encounter will actually become dangerous.
-2. **Multi-Agent Streaming Pipeline**: 4 decoupled asynchronous Python agents simulating real-time telemetry ingestion, tracking trends, assessing risk, and generating autonomous plain-English maneuver decisions.
-3. **Interactive 3D Mission Control Dashboard**: A space-grade HUD built with React, TypeScript, and Three.js featuring a 3D orbital constellation radar, live streaming telemetry grid, ML benchmark curves, and an interactive risk calculator.
+Total is 0 to 12. **Only the two tier thresholds are calibrated** (`rules.json`): **review at ≥ 3 points, maneuver at ≥ 6 points.** Every decision shows the points each rule contributed.
+
+### 2.2 Dijkstra, used twice (`planner.py`, **new**)
+1. **Maneuver planning.** Minimum-cost burn schedule on a time-expanded graph. It is *schematic*: a 1-D offset along the CDM miss vector, not orbital mechanics. Assumed parameters: keep-out distance 2,000 m, 6-hour steps, 250 m grid, at most 1,000 m change per step, fuel proxy in arbitrary units.
+2. **Alert routing.** Minimum-latency route from a satellite to a ground station through an *illustrative* network: 12 satellites on one ring at 500 km, 3 ground stations, neighbour and cross-links.
+
+Both were checked: our Dijkstra matches SciPy on 50 random graphs, and the planner matches a plain dynamic-programming solution on 28 cases.
+
+### 2.3 ML benchmark (comparison only)
+LightGBM on 118 features, with Random Forest, Logistic Regression and a "latest risk only" rule as other baselines.
+
+### 2.4 Extension: learning agent (MESA)
+A contextual bandit (epsilon-greedy over a reward table) in a MESA simulation. **Rewards are assumed, not measured.** It learns from 7,187 events (126 high-risk) and is tested on held-out missions: 4,755 events (197 high-risk). The data has 19 missions in total. It is *not* Q-learning, and it is not part of the main decision path.
 
 ---
 
-## ✨ Key Features
+## 3. Results (what was measured)
 
-- **🌐 3D Orbital Constellation Radar**: Interactive WebGL globe rendering Earth, active satellite orbits, and dynamic risk color-coded conjunction vectors (`Three.js` / `@react-three/fiber`).
-- **⚡ Real-Time WebSocket Streaming**: Bi-directional asynchronous event stream with variable replay speeds (`0.5x` to `10.0x`), pause, and reset controls.
-- **🤖 Autonomous Decision Agent**: Translates risk scores and historical trends into operational actions (`NO_ACTION`, `MONITOR`, `MANEUVER`) accompanied by natural-language rationales.
-- **🧮 Interactive Live Risk Calculator**: Allows flight dynamics engineers to enter custom CDM sequences or test curated incident presets ("False Alarm Escalation", "Sudden High Risk Encounter") with live TreeSHAP feature driver breakdowns.
-- **📊 Benchmark Evaluation**: Full comparative ROC AUC and Precision-Recall evaluation across Baseline Rules, Logistic Regression, Random Forest, and LightGBM models.
-- **🧠 Reinforcement Learning & Simulation**: Tabular Q-Learning policy explorer and multi-satellite MESA collision avoidance simulation player.
+All numbers below come from **5-fold cross-validation grouped by mission** on the 11,942 scorable training events. They are **not** results on unseen test data. The 2,167 test events have no labels, so no test accuracy exists.
+
+### 3.1 Benchmark (threshold set to 90% recall)
+
+| Model | ROC-AUC | PR-AUC | Precision at 90% recall | Balanced accuracy |
+|---|---|---|---|---|
+| Rule: latest risk only | 0.975 | 0.444 | 0.525 | 0.939 |
+| Logistic regression | 0.948 | 0.327 | 0.191 | 0.898 |
+| Random forest (300 trees) | 0.981 | 0.796 | 0.599 | 0.942 |
+| LightGBM (118 features) | 0.979 | 0.813 | 0.598 | 0.942 |
+
+LightGBM confusion matrix at this threshold: 11,423 TN, 196 FP, 32 FN, 291 TP. A smaller 5-input LightGBM model used by the calculator reaches ROC-AUC 0.982 and PR-AUC 0.807.
+
+### 3.2 Rule engine vs ML at the same recall (cross-validated)
+
+Rule thresholds are chosen on training folds and applied to held-out missions.
+
+| Recall reached | Points ≥ | Rule precision | Latest-risk-only | LightGBM | Missed |
+|---|---|---|---|---|---|
+| 0.929 | 6 | 0.514 | 0.527 | 0.481 | 23 |
+| 0.944 | 3 | 0.306 | 0.421 | 0.420 | 18 |
+| 0.978 | 2 | 0.094 | 0.118 | 0.092 | 7 |
+
+Honest reading: the rule engine edges out LightGBM at 0.929 recall, ties at 0.978, is clearly worse at 0.944, and is slightly below "latest risk only" in every row. Its advantages are transparency and simplicity, not a better score. Because points are integers, there is no threshold between recall 0.929 (≥ 6) and 0.582 (≥ 7), so the maneuver tier lands at about 93% recall.
+
+### 3.3 Final tiers (calibrated on all 11,942 events, so in-sample)
+
+| Tier | Points | Recall | Precision | Flagged | Missed |
+|---|---|---|---|---|---|
+| Review (MONITOR) | ≥ 3 | 0.960 | 0.251 | 1,237 | 13 |
+| Maneuver | ≥ 6 | 0.929 | 0.514 | 584 | 23 |
+
+The review tier cuts false negatives, but at a real precision cost. In cross-validation it reaches recall 0.944 (18 missed) while flagging 996 events. Of the 13 events it misses in-sample, 5 have a latest risk at the floor (≤ -12), so nothing is visible before the cutoff.
+
+### 3.4 Decisions on the 2,167 unlabelled test events
+
+| Decision | Rule engine | ML benchmark |
+|---|---|---|
+| MANEUVER | 183 | 72 |
+| MONITOR | 111 | 68 |
+| NO_ACTION | 1,873 | 2,027 |
+
+Both flag 139 events. The rule engine flags more (294 vs 140). Without labels we cannot say which is right.
+
+### 3.5 Planner and routing (on the 584 maneuver-tier training events)
+- Burn needed: 235. Already above the keep-out distance: 349. Infeasible: 0.
+- Where no burn is needed, the high Pc comes from position uncertainty, so the plan says **refine tracking first**.
+- Fuel proxy: median 1.16, max 1.89 (arbitrary units). Median 2 burns per plan.
+- Routing over one orbit for one satellite: reachable 96/96 times, latency median 31.2 ms, max 70.8 ms; waiting for a direct ground pass takes up to 24.8 min.
 
 ---
 
-## 🏗️ System Architecture
+## 4. Decision policy
+
+| Rule-engine level | Points | Action |
+|---|---|---|
+| LOW | < 3 | `NO_ACTION` |
+| MEDIUM | 3 to 5 | `MONITOR` |
+| HIGH | ≥ 6 | `MANEUVER`, with a plan: **burn** or **refine tracking first** |
+
+**Phase rule.** Before the decision point, a MEDIUM or HIGH score can only raise a watch (`MONITOR`). Only the decision point (the last CDM at least 2 days before closest approach) can issue `MANEUVER`.
+
+The ML score is carried alongside as `ml_score` for comparison only. The ML thresholds 0.1174 (review) and 0.6335 (maneuver) apply to the benchmark. The calculator's lite model uses different thresholds (0.2003 and 0.6575).
+
+---
+
+## 5. Architecture
 
 ```
-                       ┌─────────────────────────────────────────┐
-                       │          Raw ESA CDM Datasets           │
-                       │    (replay_demo_v3.json / all.csv)      │
-                       └────────────────────┬────────────────────┘
-                                            │
-                                            ▼
-                        ┌───────────────────────────────────────┐
-                        │        Agent 1: Ingestion Agent       │
-                        │   (Regulates clock & synthetic ticks) │
-                        └───────────────────┬───────────────────┘
-                                            │
-                                            ▼
-                        ┌───────────────────────────────────────┐
-                        │        Agent 2: Tracking Agent        │
-                        │    (Calculates deltas & Pc trends)    │
-                        └───────────────────┬───────────────────┘
-                                            │
-                                            ▼
-                        ┌───────────────────────────────────────┐
-                        │          Agent 3: Risk Agent          │
-                        │    (Feature engineering & ML score)   │
-                        └───────────────────┬───────────────────┘
-                                            │
-                                            ▼
-                        ┌───────────────────────────────────────┐
-                        │        Agent 4: Maneuver Agent        │
-                        │  (Threshold policy & natural rationale)│
-                        └───────────────────┬───────────────────┘
-                                            │
-                   ┌────────────────────────┴────────────────────────┐
-                   │                                                 │
-                   ▼                                                 ▼
-        ┌───────────────────────┐                        ┌───────────────────────┐
-        │   WebSocket /stream   │                        │   FastAPI REST APIs   │
-        │  (Live Push to Client)│                        │ (/predict, /metrics)  │
-        └──────────┬────────────┘                        └───────────┬───────────┘
-                   │                                                 │
-                   └────────────────────────┬────────────────────────┘
-                                            │
-                                            ▼
-                       ┌─────────────────────────────────────────┐
-                       │          React Mission Control          │
-                       │  (Three.js 3D Radar + Telemetry Table)  │
-                       └─────────────────────────────────────────┘
+Replay files (v4)  ->  Ingestion  ->  Tracking  ->  Risk (rule points + ml_score)  ->  Maneuver / alert agent
+                                                                                              |
+                                          FastAPI: WebSocket /stream + REST  ->  React Mission Control
 ```
+
+Four asynchronous agents: ingestion (replay clock), tracking (deltas and trends), risk (rule points, drivers, benchmark score), maneuver (decision, plan, alert route). The live calculator scores custom inputs with the 5-input LightGBM model.
 
 ---
 
-## 📁 Repository Structure
-
-The project is structured into two complementary packages:
+## 6. Repository structure
 
 ```
 satellite/
-├── satellite_ml_package 2/              # 🐍 PYTHON BACKEND & MACHINE LEARNING ENGINE
-│   ├── backend/
-│   │   ├── main.py                     # FastAPI application, CORS & WebSocket routing
-│   │   ├── agents/
-│   │   │   ├── ingestion.py            # Agent 1: Ingestion & replay clock
-│   │   │   ├── tracking.py             # Agent 2: Step tracking, deltas & trend calculation
-│   │   │   ├── risk.py                 # Agent 3: ML score evaluation & SHAP drivers
-│   │   │   ├── maneuver.py             # Agent 4: Decision policy & human rationales
-│   │   │   └── orchestrator.py         # Asyncio queue manager, EventStore & WebSocket push
-│   │   ├── api/
-│   │   │   ├── calculator.py           # REST endpoints for live LightGBM inference (/predict)
-│   │   │   └── learning.py             # REST endpoints for Q-learning policy & simulation
-│   │   ├── core/
-│   │   │   ├── config.py               # Paths, replay speeds & environment settings
-│   │   │   ├── models.py               # Pydantic v2 schemas for all network messages
-│   │   │   └── logger.py               # Asynchronous stream logger (logs/stream.jsonl)
-│   │   └── tests/
-│   │       ├── conftest.py             # Pytest test fixtures
-│   │       └── test_backend.py         # Comprehensive API & agent test suite
+├── satellite_ml_package 2/            # Backend and ML
+│   ├── backend/                       # FastAPI, agents, API routes, tests
 │   ├── ml/
-│   │   ├── risk_lite.py                # Feature engineering & LightGBM inference engine
-│   │   ├── risk_model_lite.joblib      # Serialized trained LightGBM model weights
-│   │   └── presets.json                # Realistic incident scenario presets
-│   ├── data/
-│   │   ├── replay_demo_v3.json         # 19 curated showcase events for instant replay
-│   │   ├── replay_all_v3.csv           # Full 2,167 conjunction events replay dataset
-│   │   ├── metrics.json                # Benchmark metrics for all models (11,942 test events)
-│   │   ├── policy.json                 # Calibrated operational thresholds
-│   │   ├── learning.json               # Q-Learning training metrics and rewards
-│   │   ├── learned_policy.json         # Trained 10x3 Q-table state-action policy
-│   │   ├── sim_frames.json             # Animated multi-satellite MESA simulation frames
-│   │   └── figs/                       # Benchmark curves and simulation GIFs
-│   ├── logs/                           # Runtime JSONL stream logs
-│   ├── requirements.txt                # Python package dependencies
-│   ├── pytest.ini                      # Pytest runner configuration
-│   └── README.md                       # Backend-specific documentation
-│
-├── satellite_ml_package/                # ⚛️ REACT + TYPESCRIPT FRONTEND (MISSION CONTROL)
-│   ├── src/
-│   │   ├── App.tsx                     # Main dashboard layout, sidebar navigation & controls
-│   │   ├── api.ts                      # WebSocket client & REST API communication layer
-│   │   ├── types.ts                    # TypeScript data models and network schemas
-│   │   ├── main.tsx                    # React DOM mount point
-│   │   ├── index.css                   # Custom dark HUD design system & styling tokens
-│   │   └── components/
-│   │       ├── ConstellationView.tsx   # Three.js 3D WebGL orbital radar
-│   │       ├── ConjunctionTable.tsx    # Live WebSocket-driven telemetry grid
-│   │       ├── ModelPerformance.tsx    # Benchmark comparisons & ROC/PR curves
-│   │       ├── RiskCalculator.tsx      # Live interactive CDM risk evaluator & presets
-│   │       └── LearningAgent.tsx       # Q-learning policy visualizer & simulation player
-│   ├── dev-fullstack.sh                # One-command script to launch backend & frontend
-│   ├── package.json                    # Node dependencies (React 18, Three.js, Recharts)
-│   ├── vite.config.ts                  # Vite build & proxy configuration
-│   ├── index.html                      # HTML5 template with Google Fonts
-│   └── README.md                       # Frontend-specific documentation
-│
-└── README.md                           # 📖 Master repository documentation (this file)
+│   │   ├── rule_engine.py             # (new) points system
+│   │   ├── planner.py                 # (new) Dijkstra maneuver planner and alert router
+│   │   ├── rules.json                 # (new) thresholds, CV table, sweep
+│   │   ├── risk_model.py / .joblib    # LightGBM benchmark
+│   │   ├── risk_lite.py / .joblib     # 5-input calculator model
+│   │   └── presets.json
+│   └── data/
+│       ├── replay_demo_v4.json        # (new) 19 demo events
+│       ├── replay_all_v4.csv          # (new) 2,167 events with rule_points, maneuver_plan, alert_route, ml_score
+│       ├── metrics.json, policy.json, learning.json, learned_policy.json, sim_frames.json
+│       └── figs/                      # figures 1 to 14
+├── satellite_ml_package/              # React + TypeScript frontend
+└── README.md
 ```
 
----
-
-## 🧠 Machine Learning & Decision Engine
-
-### Physical Features
-- `time_to_tca_hours`: Countdown in hours until closest orbital encounter.
-- `miss_distance_m`: Estimated clearance distance between satellite and debris.
-- `collision_probability`: Decimal probability calculated from sensor error clouds.
-- `log10_pc`: Base-10 logarithm of collision probability (`-5.0` = 1 in 100,000; `-3.0` = 1 in 1,000).
-- `relative_speed_ms`: Closing encounter velocity (7,000 to 14,000 m/s).
-- `mahalanobis_distance`: Statistical distance normalized by radar uncertainty covariance.
-
-### Temporal Feature Engineering
-Because single radar snapshots are noisy, our pipeline computes historical trends across time steps:
-- **Rate of change (slopes)**: `risk_slope`, `miss_distance_slope` over the last 3 and 5 updates.
-- **Aggregations**: `risk_max`, `risk_mean`, `miss_distance_min`.
-- **Span**: `n_cdm` update count and `span_days` elapsed observation window.
+Figures 12 (data overview), 13 (maneuver plan) and 14 (alert routing) are new.
 
 ---
 
-## 📊 Model Benchmark Comparison
+## 7. Run it
 
-Evaluated on **11,942 unseen ESA test conjunction events** (323 true positive high-risk encounters):
+Prerequisites: Python 3.11+, Node.js 18+.
 
-| Model | ROC AUC | PR AUC | Precision @ Target Recall | Description |
-|---|:---:|:---:|:---:|---|
-| **Baseline Rule ("Last Pc")** | 0.812 | 0.444 | ~12.5% | Simple threshold on raw radar probability |
-| **Logistic Regression** | 0.947 | 0.327 | ~9.1% | Linear baseline model |
-| **Random Forest** | 0.981 | 0.796 | ~64.2% | Ensemble of 100 bagged decision trees |
-| **Full LightGBM** | **0.979** | **0.813** | **~67.8%** | Gradient boosted decision trees on full feature set |
-| **Lite LightGBM (Production)** | **0.982** | **0.807** | **~66.5%** | Distilled 5-feature model for real-time web inference |
-
----
-
-## 🚦 Operational Decisions & Threshold Policy
-
-Rather than an arbitrary 0.5 probability cutoff, decision thresholds are calibrated based on operational risk tolerance (`data/policy.json`):
-
-| Risk Score Range | Risk Level | Operational Action | Operational Meaning & Impact |
-|:---:|:---:|:---:|---|
-| `< 0.2003` | **LOW** | `NO_ACTION` | Safe encounter. Normal satellite payload operations continue. No fuel spent. |
-| `0.2003 – 0.6575` | **MEDIUM** | `MONITOR` | Elevated uncertainty. Flight dynamics teams enter heightened readiness. Hold thrusters. |
-| `>= 0.6575` | **HIGH** | `MANEUVER` | Imminent danger in decision window. Compute burn vectors and execute collision avoidance maneuver. |
-
-*Safety Override*: Any high-risk alert occurring during `EARLY_WATCH` (> 48h to TCA) is automatically downgraded to `MONITOR` with an advisory log to prevent wasting fuel on early radar drift.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- **Python 3.11+**
-- **Node.js 18+ & npm**
-
----
-
-### Option A: One-Command Quickstart
-
-#### On Windows:
-Double-click [`start-windows.bat`](file:///c:/Users/aryan/Desktop/AIML/Project/Combine/start-windows.bat) in the project root, or in PowerShell run:
-```powershell
-.\start-windows.ps1
 ```
-*(Or from within `satellite_ml_package`, run `.\dev-fullstack.bat` or `.\dev-fullstack.ps1`)*
+# Windows: double-click start-windows.bat, or run .\start-windows.ps1
 
-#### On macOS / Linux:
-```bash
-# Navigate to satellite_ml_package and execute the fullstack launcher
-cd "satellite_ml_package"
-chmod +x dev-fullstack.sh
-./dev-fullstack.sh
-```
-
-This starts:
-- 🐍 FastAPI Backend at: `http://localhost:8000`
-- ⚛️ React Mission Control at: `http://localhost:5173`
-
----
-
-### Option B: Manual Setup (Backend & Frontend)
-
-#### Step 1: Start the Backend (`satellite_ml_package 2`)
-```bash
+# Manual
 cd "satellite_ml_package 2"
-
-# Create and activate Python virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+python3 -m venv venv && source venv/bin/activate     # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# Start FastAPI development server
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
 
-#### Step 2: Start the Frontend (`satellite_ml_package`)
-Open a new terminal window:
-```bash
 cd "satellite_ml_package"
-
-# Install Node dependencies
-npm install
-
-# Start Vite development server
-npm run dev
+npm install && npm run dev                            # http://localhost:5173
 ```
 
-#### Step 3: Access Mission Control
-Open your browser and navigate to:
-```
-http://localhost:5173
-```
+### API
+- WebSocket: `ws://localhost:8000/stream`
+- REST: `/health`, `/predict`, `/predict/presets`, `/predict/info`, `/metrics`, `/policy`, `/learning` (contextual-bandit metrics), `/learning/policy`, `/simulation/frames`
 
 ---
 
-## 🔌 API & WebSocket Reference
+## 8. Limitations
 
-### WebSocket Streaming
-- **URL**: `ws://localhost:8000/stream`
-- **Envelope Format**:
-  ```json
-  {
-    "schema_version": "1.0",
-    "message_id": "msg-0042",
-    "msg_type": "STATE_UPDATE | RISK_ALERT | MANEUVER_DECISION",
-    "event_id": 1042,
-    "emitted_at": "2026-10-12T20:30:00Z",
-    "source_agent": "ingestion | tracking | risk | maneuver",
-    "payload": { ... }
-  }
-  ```
-
-### Key REST Endpoints
-| Endpoint | Method | Description |
-|---|:---:|---|
-| `/health` | `GET` | System status and healthcheck |
-| `/predict` | `POST` | Live LightGBM inference for custom CDM sequences |
-| `/predict/presets` | `GET` | Returns realistic incident presets |
-| `/predict/info` | `GET` | Returns model features, thresholds, and metadata |
-| `/metrics` | `GET` | Returns comparative benchmark evaluations for all models |
-| `/policy` | `GET` | Returns calibrated operational decision thresholds |
-| `/learning` | `GET` | Returns Q-Learning training metrics and reward curves |
-| `/learning/policy` | `GET` | Returns the 10x3 Q-Table state-action policy matrix |
-| `/simulation/frames` | `GET` | Returns multi-satellite MESA collision simulation frames |
+- All accuracy figures are cross-validated on training events; test labels do not exist.
+- Tier thresholds are fitted on all training events, so tier recall and precision in 3.3 are in-sample (only two numbers are fitted).
+- The maneuver planner is a schematic cost model with an assumed 2,000 m keep-out distance and an arbitrary fuel unit, not orbital mechanics.
+- The alert network is illustrative. In the replay, the source satellite and time of each route are assigned from the event id, not taken from data.
+- The MESA agent uses assumed rewards.
+- The rule engine does not beat "latest risk only" at equal recall (section 3.2).
 
 ---
 
-## 📄 License & Acknowledgments
+## 9. Acknowledgments
 
-- **Dataset**: European Space Agency (ESA) Space Debris Office – Collision Avoidance Challenge.
-- **License**: Released under the [MIT License](https://opensource.org/licenses/MIT).
+Dataset: European Space Agency Space Debris Office, Collision Avoidance Challenge. Licence: MIT.

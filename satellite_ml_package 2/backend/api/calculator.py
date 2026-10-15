@@ -19,6 +19,12 @@ if _ml_path not in sys.path:
     sys.path.insert(0, _ml_path)
 
 import risk_lite  # noqa: E402  (ml/ added to path above)
+import rule_engine  # noqa: E402
+
+# Pre-load thresholds from rules.json
+_rules_path = ML_DIR / "rules.json"
+if _rules_path.exists():
+    rule_engine.load_thresholds(str(_rules_path))
 
 router = APIRouter(prefix="/predict", tags=["calculator"])
 
@@ -68,15 +74,64 @@ class PredictRequest(BaseModel):
 
 @router.post("")
 async def predict(body: PredictRequest):
-    """Run the lite risk model on a custom CDM history."""
+    """Run the transparent rule engine assessment as primary, with lite ML model as benchmark."""
     rows = [r.model_dump() for r in body.history]
-    return risk_lite.predict_custom(rows)
+
+    # Primary: Rule Engine assessment
+    rule_res = rule_engine.assess(rows)
+
+    # Benchmark: Lite ML model
+    ml_res = risk_lite.predict_custom(rows)
+
+    warnings = list(dict.fromkeys(rule_res.get("warnings", []) + ml_res.get("warnings", [])))
+
+    return {
+        # Primary Rule Engine assessment
+        "points": rule_res.get("points"),
+        "max_points": rule_res.get("max_points", rule_engine.MAX_POINTS),
+        "risk_score": rule_res.get("risk_score"),
+        "risk_level": rule_res.get("risk_level"),
+        "decision_if_final": rule_res.get("decision_if_final"),
+        "n_cdm_used": rule_res.get("n_cdm_used", 0),
+        "drivers": rule_res.get("drivers", []),
+        "warnings": warnings,
+
+        # Backward compatibility with existing frontend clients
+        "top_drivers": rule_res.get("drivers", []),
+
+        # Lite ML Benchmark Comparison
+        "ml_score": ml_res.get("risk_score"),
+        "ml_risk_level": ml_res.get("risk_level"),
+        "ml_decision": ml_res.get("decision_if_final"),
+        "ml_benchmark": {
+            "risk_score": ml_res.get("risk_score"),
+            "risk_level": ml_res.get("risk_level"),
+            "decision_if_final": ml_res.get("decision_if_final"),
+            "thresholds": {"review": 0.2003, "maneuver": 0.6575},
+            "top_drivers": ml_res.get("top_drivers", []),
+            "label": "LightGBM Benchmark (Comparison Only)",
+        },
+    }
 
 
 @router.get("/info")
 async def predict_info():
-    """Return model metadata (cutoff, thresholds, feature ranges)."""
-    return risk_lite.info()
+    """Return rule engine metadata and ML benchmark metadata."""
+    ml_info = risk_lite.info()
+    rule_thresholds = rule_engine.load_thresholds(str(_rules_path)) if _rules_path.exists() else dict(rule_engine.THRESHOLDS)
+    return {
+        "rule_engine": {
+            "cutoff_days": rule_engine.CUTOFF_DAYS,
+            "max_points": rule_engine.MAX_POINTS,
+            "thresholds": rule_thresholds,
+            "params": rule_engine.PARAMS,
+        },
+        "ml_benchmark": ml_info,
+        "cutoff_days": rule_engine.CUTOFF_DAYS,
+        "threshold": rule_thresholds.get("review", 3),
+        "threshold_hi": rule_thresholds.get("maneuver", 6),
+        "ranges": ml_info.get("ranges", {}),
+    }
 
 
 @router.get("/presets")

@@ -1,4 +1,3 @@
-// src/api.ts
 import type {
   StreamMessage,
   StateUpdate,
@@ -12,6 +11,7 @@ import type {
   PredictResult,
   CdmInputRow,
   SimulationFramesResponse,
+  RulesData,
 } from './types';
 
 // Toggle between mock data and live backend (default: live backend)
@@ -166,6 +166,12 @@ export const fetchPolicy = async (): Promise<Record<string, any>> => {
   return handleResponse<Record<string, any>>(res);
 };
 
+/** Get rules engine configuration */
+export const fetchRules = async (): Promise<RulesData> => {
+  const res = await fetch(`${API_BASE}/rules`);
+  return handleResponse<RulesData>(res);
+};
+
 /** Live risk calculator prediction */
 export const predictRisk = async (body: PredictRequest): Promise<PredictResult> => {
   const res = await fetch(`${API_BASE}/predict`, {
@@ -212,7 +218,7 @@ export const fetchSimulationFrames = async (
 // ── Mock Replay Fallback ───────────────────────────────────────────────────────
 
 export const startMock = (cb: (msg: StreamMessage) => void) => {
-  import('../replay_demo_v3.json')
+  import('../data/replay_demo_v4.json')
     .then((module) => {
       const mockData = module.default || module;
       if (!Array.isArray(mockData)) return;
@@ -253,6 +259,8 @@ export const startMock = (cb: (msg: StreamMessage) => void) => {
               risk_level: row.risk_level,
               phase: row.phase,
               top_drivers: row.top_drivers,
+              rule_points: row.rule_points,
+              ml_score: row.ml_score,
             },
           };
           cb(risk);
@@ -266,8 +274,13 @@ export const startMock = (cb: (msg: StreamMessage) => void) => {
             payload: {
               decision: row.decision,
               phase: row.phase,
-              rationale: 'Demo decision',
-              suggested_delta_v_ms: null,
+              rationale: row.decision === 'MANEUVER' && row.maneuver_plan?.burn_needed === false
+                ? 'Refine tracking first, no burn needed.'
+                : 'Demo assessment',
+              suggested_delta_v_ms: row.maneuver_plan?.fuel_proxy ?? null,
+              rule_points: row.rule_points,
+              maneuver_plan: row.maneuver_plan,
+              alert_route: row.alert_route,
             },
           };
           cb(decision);
@@ -280,4 +293,5 @@ export const startMock = (cb: (msg: StreamMessage) => void) => {
 
   return () => {};
 };
+
 

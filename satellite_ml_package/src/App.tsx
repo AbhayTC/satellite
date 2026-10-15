@@ -129,7 +129,7 @@ const App: React.FC = () => {
     { to: '/table', label: 'CONJUNCTION STREAM', icon: <IconTable size={15} /> },
     { to: '/performance', label: 'MODEL BENCHMARKS', icon: <IconChart size={15} /> },
     { to: '/calculator', label: 'RISK CALCULATOR', icon: <IconCalculator size={15} /> },
-    { to: '/learning', label: 'LEARNING AGENT', icon: <IconCpu size={15} /> },
+    { to: '/learning', label: 'EXTENSION: BANDIT AGENT', icon: <IconCpu size={15} /> },
   ];
 
   return (

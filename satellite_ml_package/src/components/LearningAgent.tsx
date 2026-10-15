@@ -15,12 +15,14 @@ const LearningAgent: React.FC = () => {
     Promise.all([
       fetchLearning().catch(() => null),
       fetchLearnedPolicy().catch(() => []),
-      fetchSimulationFrames(0, 40).catch(() => null)
-    ]).then(([l, p, s]) => {
-      setLearning(l);
-      setPolicy(p || []);
-      setSimData(s);
-    }).finally(() => setLoading(false));
+      fetchSimulationFrames(0, 40).catch(() => null),
+    ])
+      .then(([l, p, s]) => {
+        setLearning(l);
+        setPolicy(p || []);
+        setSimData(s);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   // Frame player playback timer
@@ -38,7 +40,7 @@ const LearningAgent: React.FC = () => {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40vh', gap: '0.5rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
         <span className="radar-spinner" />
-        <span>LOADING REINFORCEMENT LEARNING SIMULATION RUNTIME...</span>
+        <span>LOADING CONTEXTUAL BANDIT SIMULATION RUNTIME...</span>
       </div>
     );
   }
@@ -50,11 +52,14 @@ const LearningAgent: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '1200px' }}>
       <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
         <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
-          SUBSYSTEM: AUTONOMOUS_AVOIDANCE // AGENT: TABULAR_Q_LEARNING
+          EXTENSION_MODULE: AUTONOMOUS_AVOIDANCE // AGENT: CONTEXTUAL_BANDIT // REWARD: ASSUMED_UTILITY
         </div>
         <h2 style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
-          Reinforcement Learning Policy & Constellation Simulation
+          Extension: Learning Agent (Contextual Bandit, Assumed Rewards)
         </h2>
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+          Research extension for adaptive thresholding across synthetic multi-satellite encounters. Not part of core flight rules.
+        </div>
       </div>
 
       {/* MESA Simulation Frame Player */}
@@ -159,14 +164,19 @@ const LearningAgent: React.FC = () => {
         )}
       </div>
 
-      {/* Q-Table Policy Matrix */}
+      {/* Contextual Bandit Policy Matrix */}
       <div style={{ background: 'var(--bg-surface)', borderRadius: '2px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
         <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-            TABULAR Q-LEARNING STATE-ACTION POLICY MATRIX
-          </span>
-          <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>
-            DISCOUNT (GAMMA): 0.95 // ALPHA: 0.10
+          <div>
+            <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', fontWeight: 700 }}>
+              CONTEXTUAL BANDIT STATE-ACTION POLICY MATRIX (ASSUMED REWARDS)
+            </span>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
+              State-conditioned actions under assumed collision vs fuel trade-off reward penalties.
+            </div>
+          </div>
+          <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)', background: '#090d14', padding: '0.15rem 0.4rem', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
+            ASSUMED REWARDS: BURNS (-1.0), NEAR-MISS (-50.0)
           </span>
         </div>
         <div style={{ overflowX: 'auto', maxHeight: '45vh' }}>
@@ -175,16 +185,16 @@ const LearningAgent: React.FC = () => {
               <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-strong)', background: 'var(--bg-surface-elevated)' }}>
                 <th style={{ padding: '0.6rem 0.85rem' }}>STATE / RISK BIN</th>
                 <th style={{ padding: '0.6rem 0.85rem' }}>TIME TO TCA BIN</th>
-                <th style={{ padding: '0.6rem 0.85rem' }}>OPTIMAL ACTION</th>
-                <th style={{ padding: '0.6rem 0.85rem' }}>CONVERGED Q-VALUE</th>
-                <th style={{ padding: '0.6rem 0.85rem' }}>EXPECTED RETURN</th>
+                <th style={{ padding: '0.6rem 0.85rem' }}>RECOMMENDED ACTION</th>
+                <th style={{ padding: '0.6rem 0.85rem' }}>ESTIMATED RETURN</th>
+                <th style={{ padding: '0.6rem 0.85rem' }}>EXPECTED UTILITY</th>
               </tr>
             </thead>
             <tbody>
               {policy.length === 0 ? (
                 <tr>
                   <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    LOADING POLICY Q-TABLE...
+                    LOADING CONTEXTUAL BANDIT POLICY...
                   </td>
                 </tr>
               ) : (
@@ -221,6 +231,10 @@ const LearningAgent: React.FC = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontStyle: 'italic', fontFamily: 'var(--font-mono)' }}>
+        Footnote: The contextual bandit learning agent is an extension, not the core pipeline authority. All rewards are assumed proxies rather than certified mission constraints.
       </div>
     </div>
   );

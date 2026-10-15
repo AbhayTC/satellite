@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 def _build_rationale(
     row: CdmRow,
+    decision: str,
     pc_trend: str,
     top_drivers: Optional[List[TopDriver]],
 ) -> str:
@@ -47,29 +48,46 @@ def _build_rationale(
         "DECISION":    "decision phase",
     }.get(row.phase, row.phase)
 
-    decision_desc = {
-        "MANEUVER":  "a maneuver is recommended",
-        "MONITOR":   "continued monitoring is recommended",
-        "NO_ACTION": "no action is required at this time",
-    }.get(row.decision, row.decision)
-
     trend_desc = {
         "rising":  "collision probability is trending upward",
         "falling": "collision probability is trending downward",
         "stable":  "collision probability is stable",
     }.get(pc_trend, "trend unknown")
 
+    pts_str = f"{row.rule_points}/12 rule points" if row.rule_points is not None else f"score {row.risk_score:.4f}"
+
     parts = [
         f"Event {row.event_id}: In the {phase_desc} with {h_str} to closest approach,",
-        f"risk level is {row.risk_level} and {trend_desc}.",
-        f"Assessment: {decision_desc}.",
+        f"risk level is {row.risk_level} ({pts_str}) and {trend_desc}.",
     ]
 
     if top_drivers:
-        driver_labels = [d.label for d in top_drivers[:3]]
-        parts.append(
-            "Key drivers: " + "; ".join(driver_labels) + "."
-        )
+        driver_items = []
+        for d in top_drivers[:3]:
+            lbl = d.label or d.feature
+            pts = int(d.contribution) if d.contribution is not None else 0
+            driver_items.append(f"{lbl} contributed {pts} points")
+        if driver_items:
+            parts.append("Key rule drivers: " + "; ".join(driver_items) + ".")
+
+    if decision == "MANEUVER":
+        if row.maneuver_plan and not row.maneuver_plan.burn_needed:
+            parts.append(
+                "Assessment: MANEUVER recommended, but predicted miss distance is already above keep-out distance; "
+                "refine tracking first, no burn needed."
+            )
+        elif row.maneuver_plan and row.maneuver_plan.burn_needed:
+            burn_count = len(row.maneuver_plan.burns)
+            parts.append(
+                f"Assessment: MANEUVER recommended ({burn_count} burn(s) scheduled to reach "
+                f"{row.maneuver_plan.final_separation_m} m separation)."
+            )
+        else:
+            parts.append("Assessment: a maneuver is recommended.")
+    elif decision == "MONITOR":
+        parts.append("Assessment: continued monitoring is recommended.")
+    else:
+        parts.append("Assessment: no action is required at this time.")
 
     return " ".join(parts)
 
@@ -100,12 +118,14 @@ async def maneuver_agent(
         risk_msg: StreamMessage
         row, state_msg, risk_msg = item
 
-        # Invariant check
-        if row.decision == "MANEUVER" and row.phase != "DECISION":
+        # Phase rule invariant check:
+        # Before decision point (is_decision_point False or EARLY_WATCH),
+        # MEDIUM or HIGH score can only produce MONITOR; only the decision row can produce MANEUVER.
+        if row.decision == "MANEUVER" and (not row.is_decision_point or row.phase != "DECISION"):
             logger.warning(
-                "Event %s step %d: MANEUVER on non-DECISION row (phase=%s). "
+                "Event %s step %d: MANEUVER on non-DECISION row (phase=%s, is_decision_point=%s). "
                 "Downgrading to MONITOR.",
-                row.event_id, row.step, row.phase,
+                row.event_id, row.step, row.phase, row.is_decision_point,
             )
             decision = "MONITOR"
         else:
@@ -115,13 +135,16 @@ async def maneuver_agent(
         pc_trend: str = state_msg.payload.get("pc_trend", "stable")
         top_drivers = row.top_drivers
 
-        rationale = _build_rationale(row, pc_trend, top_drivers)
+        rationale = _build_rationale(row, decision, pc_trend, top_drivers)
 
         payload = ManeuverDecisionPayload(
             decision=decision,
             phase=row.phase,
             rationale=rationale,
-            suggested_delta_v_ms=None,
+            suggested_delta_v_ms=row.maneuver_plan.fuel_proxy if (row.maneuver_plan and row.maneuver_plan.burn_needed) else None,
+            rule_points=row.rule_points,
+            maneuver_plan=row.maneuver_plan if decision == "MANEUVER" else None,
+            alert_route=row.alert_route if decision in ("MANEUVER", "MONITOR") else None,
         )
         try:
             msg = StreamMessage(
@@ -137,3 +160,4 @@ async def maneuver_agent(
         await out_queue.put((state_msg, risk_msg, msg))
 
     logger.info("Maneuver agent stopped.")
+

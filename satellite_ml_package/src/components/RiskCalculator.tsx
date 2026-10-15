@@ -131,14 +131,14 @@ const RiskCalculator: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
             <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
-              SUBSYSTEM: FLIGHT_DYNAMICS // MODULE: CDM_INFERENCE_CALCULATOR
+              SUBSYSTEM: FLIGHT_DYNAMICS // MODULE: CDM_RULE_ENGINE_CALCULATOR
             </div>
             <h2 style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '0.02em', marginTop: '0.2rem' }}>
               Conjunction Risk Prediction Evaluator
             </h2>
           </div>
           <div style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-            CUTOFF: {modelInfo?.tca_cutoff_days ?? '2.0'}d | MANEUVER_THR: {modelInfo?.threshold_maneuver ?? '0.6575'}
+            CUTOFF: 2.0d | REVIEW &ge; 3 PTS | MANEUVER &ge; 6 PTS
           </div>
         </div>
       </div>
@@ -168,7 +168,7 @@ const RiskCalculator: React.FC = () => {
           ))}
         </select>
         <span style={{ marginLeft: 'auto', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)' }}>
-          LIGHTGBM_LITE_v4.7 (5 PHYSICAL & DERIVED ATTRIBUTES)
+          TRANSPARENT RULE ENGINE (12-POINT SCALE) + ML BENCHMARK
         </span>
       </div>
 
@@ -395,26 +395,23 @@ const RiskCalculator: React.FC = () => {
       {result && (
         <div style={{ background: 'var(--bg-surface)', borderRadius: '2px', border: '1px solid var(--border-subtle)', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-              MODEL INFERENCE READOUT
+            <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-primary)' }}>
+              PRIMARY DECISION READOUT (TRANSPARENT RULE ENGINE)
             </span>
             <CopyButton
-              text={`Risk Score: ${result.risk_score}, Level: ${result.risk_level}, Decision: ${result.decision_if_final}`}
+              text={`Rule Points: ${result.points ?? 'N/A'}/12, Decision: ${result.decision_if_final}, Level: ${result.risk_level}, ML Benchmark: ${result.ml_score ?? 'N/A'}`}
               label="COPY SUMMARY"
             />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
             <div style={{ background: '#090d14', padding: '0.85rem', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>ESTIMATED RISK SCORE</div>
-              <div style={{ fontSize: '1.65rem', fontWeight: 700, color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
-                {result.risk_score !== null ? result.risk_score.toFixed(4) : 'UNSCORED'}
+              <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>RULE POINTS ACCUMULATED</div>
+              <div style={{ fontSize: '1.65rem', fontWeight: 700, color: (result.points ?? 0) >= 6 ? '#ef4444' : (result.points ?? 0) >= 3 ? '#fbbf24' : '#4ade80', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                {result.points !== null && result.points !== undefined ? `${result.points} / ${result.max_points ?? 12} PTS` : 'UNSCORED'}
               </div>
-            </div>
-            <div style={{ background: '#090d14', padding: '0.85rem', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>CLASSIFICATION LEVEL</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, fontFamily: 'var(--font-mono)', marginTop: '0.2rem', color: result.risk_level === 'HIGH' ? '#ef4444' : result.risk_level === 'MEDIUM' ? '#f59e0b' : '#10b981' }}>
-                {result.risk_level ?? 'N/A'}
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                Score: {result.risk_score !== null && result.risk_score !== undefined ? result.risk_score.toFixed(4) : '—'}
               </div>
             </div>
             <div style={{ background: '#090d14', padding: '0.85rem', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
@@ -422,23 +419,38 @@ const RiskCalculator: React.FC = () => {
               <div style={{ fontSize: '1.4rem', fontWeight: 700, fontFamily: 'var(--font-mono)', marginTop: '0.2rem', color: result.decision_if_final === 'MANEUVER' ? '#ef4444' : result.decision_if_final === 'MONITOR' ? '#f59e0b' : '#10b981' }}>
                 {result.decision_if_final ?? 'N/A'}
               </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                Thresholds: &ge;3 Monitor, &ge;6 Maneuver
+              </div>
             </div>
             <div style={{ background: '#090d14', padding: '0.85rem', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>VALIDATED CDM UPDATES</div>
+              <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>RISK CLASSIFICATION</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 700, fontFamily: 'var(--font-mono)', marginTop: '0.2rem', color: result.risk_level === 'HIGH' ? '#ef4444' : result.risk_level === 'MEDIUM' ? '#f59e0b' : '#10b981' }}>
+                {result.risk_level ?? 'N/A'}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                Calibrated Operational Tier
+              </div>
+            </div>
+            <div style={{ background: '#090d14', padding: '0.85rem', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>VALIDATED CDMs (&ge;2.0 DAYS)</div>
               <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#cbd5e1', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
                 {result.n_cdm_used ?? rows.length}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: '0.2rem' }}>
+                Decision-Point Horizon
               </div>
             </div>
           </div>
 
-          {/* Feature Drivers Breakdown */}
-          {result.top_drivers && result.top_drivers.length > 0 && (
-            <div>
-              <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                SHAPLEY ATTRIBUTE CONTRIBUTIONS (TOP FEATURE DRIVERS):
+          {/* Rule Drivers Points Breakdown */}
+          {result.drivers && result.drivers.length > 0 && (
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
+                TRANSPARENT RULE POINTS CONTRIBUTION:
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                {result.top_drivers.map((driver, idx) => (
+                {result.drivers.map((driver, idx) => (
                   <div
                     key={idx}
                     style={{
@@ -453,16 +465,61 @@ const RiskCalculator: React.FC = () => {
                       border: '1px solid var(--border-subtle)',
                     }}
                   >
-                    <span style={{ color: '#38bdf8', fontWeight: 600 }}>{driver.feature}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>VAL: {driver.value !== null ? driver.value : 'N/A'}</span>
-                    <span style={{ color: driver.contribution >= 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>
-                      SHAP: {driver.contribution > 0 ? `+${driver.contribution.toFixed(4)}` : driver.contribution.toFixed(4)}
+                    <div>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{driver.label || driver.feature}</span>
+                      {driver.value !== null && driver.value !== undefined && (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginLeft: '0.5rem' }}>
+                          (Value: {typeof driver.value === 'number' ? driver.value.toFixed(2) : driver.value})
+                        </span>
+                      )}
+                    </div>
+                    <span style={{ color: driver.contribution > 0 ? '#fbbf24' : '#64748b', fontWeight: 700, fontSize: '0.85rem' }}>
+                      +{driver.contribution} pts
                     </span>
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Secondary LightGBM Benchmark Card */}
+          <div style={{ background: '#090d14', borderRadius: '2px', border: '1px solid #1e293b', padding: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem', borderBottom: '1px solid #1e293b', paddingBottom: '0.35rem' }}>
+              <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#94a3b8', fontWeight: 700 }}>
+                LIGHTGBM BENCHMARK COMPARISON (INFORMATIONAL ONLY)
+              </span>
+              <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '1px', background: '#1e293b', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>
+                BENCHMARK
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>BENCHMARK SCORE: </span>
+                <strong style={{ color: '#94a3b8' }}>{result.ml_score !== null && result.ml_score !== undefined ? result.ml_score.toFixed(4) : '—'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>BENCHMARK LEVEL: </span>
+                <strong style={{ color: result.ml_risk_level === 'HIGH' ? '#ef4444' : result.ml_risk_level === 'MEDIUM' ? '#f59e0b' : '#10b981' }}>{result.ml_risk_level ?? '—'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>BENCHMARK ACTION: </span>
+                <strong style={{ color: '#94a3b8' }}>{result.ml_decision ?? '—'}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>ML THRESHOLDS: </span>
+                <span style={{ color: '#64748b' }}>Rev: 0.2003 / Man: 0.6575</span>
+              </div>
+            </div>
+
+            {result.ml_benchmark?.top_drivers && result.ml_benchmark.top_drivers.length > 0 && (
+              <div style={{ marginTop: '0.65rem', borderTop: '1px solid #141c2b', paddingTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  ML SHAP DRIVERS (BENCHMARK): {result.ml_benchmark.top_drivers.map((d: any) => `${d.feature} (SHAP: ${d.contribution > 0 ? '+' : ''}${typeof d.contribution === 'number' ? d.contribution.toFixed(3) : d.contribution})`).join('; ')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

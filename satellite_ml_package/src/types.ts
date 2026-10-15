@@ -27,11 +27,50 @@ export interface StateUpdate extends BaseMessage {
   payload: StateUpdatePayload;
 }
 
+export interface TopDriver {
+  feature: string;
+  label?: string;
+  value?: number | null;
+  contribution: number;
+}
+
+export interface ManeuverBurn {
+  step: number;
+  hours_before_tca: number;
+  move_m: number;
+  fuel_proxy: number;
+}
+
+export interface ManeuverPlan {
+  d0_m: number;
+  d_safe_m: number;
+  steps: number;
+  step_hours: number;
+  feasible: boolean;
+  burn_needed: boolean | null;
+  burns: ManeuverBurn[];
+  total_cost?: number | null;
+  fuel_proxy?: number | null;
+  final_separation_m?: number | null;
+  note?: string | null;
+}
+
+export interface AlertRoute {
+  reachable: boolean;
+  path: string[];
+  hops?: number | null;
+  latency_ms?: number | null;
+  baseline_wait_s?: number | null;
+  direct_visible?: boolean | null;
+}
+
 export interface RiskAlertPayload {
   risk_score: number | null;
   risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | null;
   phase: 'EARLY_WATCH' | 'DECISION';
-  top_drivers: null | Array<{ feature: string; label: string; value: number; contribution: number }>;
+  top_drivers: null | TopDriver[];
+  rule_points?: number | null;
+  ml_score?: number | null;
 }
 
 export interface RiskAlert extends BaseMessage {
@@ -44,6 +83,9 @@ export interface ManeuverDecisionPayload {
   phase: 'EARLY_WATCH' | 'DECISION';
   rationale: string;
   suggested_delta_v_ms: number | null;
+  rule_points?: number | null;
+  maneuver_plan?: ManeuverPlan | null;
+  alert_route?: AlertRoute | null;
 }
 
 export interface ManeuverDecision extends BaseMessage {
@@ -92,12 +134,72 @@ export interface PredictRequest {
 }
 
 export interface PredictResult {
+  points?: number | null;
+  max_points?: number;
   risk_score: number | null;
   risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNSCORED' | null;
   n_cdm_used?: number;
-  top_drivers?: Array<{ feature: string; value: number; contribution: number }> | null;
+  drivers?: TopDriver[];
+  top_drivers?: TopDriver[] | null;
   warnings?: string[];
   decision_if_final?: string;
+  ml_score?: number | null;
+  ml_risk_level?: string | null;
+  ml_decision?: string | null;
+  ml_benchmark?: {
+    risk_score?: number | null;
+    risk_level?: string | null;
+    decision_if_final?: string | null;
+    thresholds?: { review: number; maneuver: number };
+    top_drivers?: any[];
+    label?: string;
+  };
+}
+
+export interface CvTableRow {
+  target_recall: number;
+  rule_points_threshold: number;
+  rule_recall: number;
+  rule_precision: number;
+  rule_missed: number;
+  rule_flagged: number;
+  latest_risk_only_precision: number;
+  ml_precision: number;
+  ml_missed_at_same_recall: number;
+}
+
+export interface SweepRow {
+  points_at_least: number;
+  flagged: number;
+  recall: number;
+  precision: number;
+  missed: number;
+}
+
+export interface TierStats {
+  recall: number;
+  precision: number;
+  flagged: number;
+}
+
+export interface RulesData {
+  method: string;
+  params: Record<string, number>;
+  max_points: number;
+  thresholds: {
+    review: number;
+    maneuver: number;
+  };
+  targets: {
+    review: number;
+    maneuver: number;
+  };
+  cv_table: CvTableRow[];
+  sweep: SweepRow[];
+  tiers: {
+    review: TierStats;
+    maneuver: TierStats;
+  };
 }
 
 export interface SimulationFramesResponse {
@@ -106,4 +208,5 @@ export interface SimulationFramesResponse {
   total: number;
   frames: Array<Record<string, any>>;
 }
+
 
