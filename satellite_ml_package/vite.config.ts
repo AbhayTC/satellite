@@ -10,6 +10,8 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0',
+    port: 5173,
     // proxy for backend REST and WebSocket calls
     proxy: {
       '/stream': { target: 'http://localhost:8000', ws: true, changeOrigin: true },
@@ -21,6 +23,7 @@ export default defineConfig({
       '/policy': { target: 'http://localhost:8000', changeOrigin: true },
       '/predict': { target: 'http://localhost:8000', changeOrigin: true },
       '/learning': { target: 'http://localhost:8000', changeOrigin: true },
+      '/rules': { target: 'http://localhost:8000', changeOrigin: true },
       '/figs': { target: 'http://localhost:8000', changeOrigin: true }
     }
   }

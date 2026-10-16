@@ -37,3 +37,16 @@ logs/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Agent metadata and local configs
+.agent/
+.agents/
+.gemini/
+.gsd/
+GSD-STYLE.md
+PROJECT_RULES.md
+VERSION
+adapters/
+model_capabilities.yaml
+scripts/
+

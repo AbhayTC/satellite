@@ -1,5 +1,5 @@
 // src/types.ts
-export type MessageType = 'STATE_UPDATE' | 'RISK_ALERT' | 'MANEUVER_DECISION';
+export type MessageType = 'STATE_UPDATE' | 'RISK_ALERT' | 'MANEUVER_DECISION' | 'PIPELINE_RESET';
 
 export interface BaseMessage {
   schema_version: string;

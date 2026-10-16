@@ -1,6 +1,6 @@
-// src/App.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fetchHealth, startReplay, stopReplay, resetReplay } from './api';
 import CookieBanner from './components/CookieBanner';
 import SupportDesk from './components/SupportDesk';
@@ -21,20 +21,15 @@ import {
   IconBook,
 } from './components/Icons';
 
-type ThemeMode = 'amber' | 'cyan' | 'emerald';
-
 const App: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const mainRef = useRef<HTMLElement | null>(null);
 
   const [health, setHealth] = useState<{ status: string; replay_running: boolean; ws_connections: number } | null>(null);
   const [loadingAction, setLoadingAction] = useState<boolean>(false);
   const [replaySpeed, setReplaySpeed] = useState<number>(2.0);
 
-  // Features state
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    return (localStorage.getItem('esa_hud_theme') as ThemeMode) || 'amber';
-  });
   const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -42,11 +37,6 @@ const App: React.FC = () => {
   const [confirmResetOpen, setConfirmResetOpen] = useState<boolean>(false);
   const [globalSearch, setGlobalSearch] = useState<string>('');
   const [currentTime, setCurrentTime] = useState<string>(new Date().toUTCString());
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('esa_hud_theme', theme);
-  }, [theme]);
 
   // Live UTC Clock
   useEffect(() => {
@@ -112,6 +102,7 @@ const App: React.FC = () => {
     setLoadingAction(true);
     try {
       await resetReplay('demo', replaySpeed);
+      window.dispatchEvent(new CustomEvent('pipeline-reset'));
       await checkHealth();
     } finally {
       setLoadingAction(false);
@@ -125,159 +116,129 @@ const App: React.FC = () => {
   };
 
   const navItems = [
-    { to: '/constellation', label: 'ORBITAL RADAR', icon: <IconGlobe size={15} /> },
-    { to: '/table', label: 'CONJUNCTION STREAM', icon: <IconTable size={15} /> },
-    { to: '/performance', label: 'MODEL BENCHMARKS', icon: <IconChart size={15} /> },
-    { to: '/calculator', label: 'RISK CALCULATOR', icon: <IconCalculator size={15} /> },
-    { to: '/learning', label: 'EXTENSION: BANDIT AGENT', icon: <IconCpu size={15} /> },
+    { to: '/constellation', label: 'ORBITAL RADAR', icon: <IconGlobe size={14} /> },
+    { to: '/table', label: 'CONJUNCTION STREAM', icon: <IconTable size={14} /> },
+    { to: '/performance', label: 'MODEL BENCHMARKS', icon: <IconChart size={14} /> },
+    { to: '/calculator', label: 'RISK CALCULATOR', icon: <IconCalculator size={14} /> },
+    { to: '/learning', label: 'EXTENSION: BANDIT AGENT', icon: <IconCpu size={14} /> },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#000000', color: 'var(--text-primary)', overflow: 'hidden' }}>
       {/* Accessible Skip Link */}
       <a href="#main-content" className="skip-link">
         SKIP NAVIGATION [JUMP TO DATA]
       </a>
 
-      {/* Solid Functional Scroll Progress Bar (No Purple Gradient) */}
+      {/* Solid Functional Scroll Progress Bar */}
       <div className="scroll-progress-container">
         <div className="scroll-progress-fill" style={{ width: `${scrollProgress}%` }} />
       </div>
 
-      {/* High-Precision Operations Header */}
+      {/* High-Precision Minimalist Operations Header */}
       <header
         className="print-hide"
         style={{
-          height: '48px',
-          background: 'var(--bg-surface)',
+          height: '46px',
+          background: '#050505',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 1rem',
+          padding: '0 1.25rem',
           zIndex: 50,
           gap: '1rem',
         }}
       >
-        {/* Console Identifier */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        {/* Console Identifier & Brand */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="mobile-hamburger"
             style={{
-              background: '#101622',
+              background: '#0d0d0d',
               border: '1px solid var(--border-subtle)',
               borderRadius: '2px',
               color: 'var(--text-primary)',
               padding: '0.25rem 0.5rem',
               cursor: 'pointer',
               fontFamily: 'var(--font-mono)',
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
             }}
           >
             MENU
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <IconSatellite size={16} color="var(--accent-primary)" />
-            <span style={{ fontWeight: 700, fontSize: '0.85rem', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', color: 'var(--text-primary)' }}>
-              ESA CONJUNCTION ASSESSMENT CONSOLE
+          <NavLink
+            to="/"
+            title="Return to Mission Briefing Overview"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#fff' }}
+          >
+            <IconSatellite size={15} color="#ffffff" />
+            <span style={{ fontWeight: 600, fontSize: '0.82rem', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em', color: '#ffffff' }}>
+              ESA CONJUNCTION ASSESSMENT
             </span>
-          </div>
+          </NavLink>
+
+          <NavLink
+            to="/"
+            style={{
+              fontSize: '0.68rem',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--text-muted)',
+              textDecoration: 'none',
+              padding: '0.15rem 0.45rem',
+              background: '#0d0d0d',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '2px',
+            }}
+          >
+            BRIEFING &rarr;
+          </NavLink>
         </div>
 
         {/* Global Search Bar */}
-        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', maxWidth: '320px', width: '100%' }}>
+        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%' }}>
           <div style={{ position: 'relative', width: '100%' }}>
             <span style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
-              <IconSearch size={12} />
+              <IconSearch size={11} />
             </span>
             <input
               type="text"
-              placeholder="SEARCH EVENT_ID / SATELLITE..."
+              placeholder="SEARCH EVENT / OBJECT..."
               value={globalSearch}
               onChange={(e) => setGlobalSearch(e.target.value)}
               style={{
                 width: '100%',
-                background: '#090d14',
-                border: '1px solid var(--border-strong)',
+                background: '#080808',
+                border: '1px solid var(--border-subtle)',
                 color: 'var(--text-primary)',
-                padding: '0.3rem 0.5rem 0.3rem 1.7rem',
+                padding: '0.28rem 0.5rem 0.28rem 1.6rem',
                 borderRadius: '2px',
-                fontSize: '0.75rem',
+                fontSize: '0.72rem',
                 fontFamily: 'var(--font-mono)',
               }}
-            />
+            >
+            </input>
           </div>
         </form>
 
-        {/* Live Timestamp & Console Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          {/* Live UTC Clock & Telemetry Beacon */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.72rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+        {/* Live Timestamp & Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {/* Live UTC Clock & Beacon */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }} className="tabular-nums">
             <span className="live-beacon" />
             <span>{currentTime}</span>
           </div>
 
-          {/* Palette Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', background: '#090d14', padding: '0.2rem', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
-            <button
-              onClick={() => setTheme('amber')}
-              title="Tactical Amber Palette"
-              style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '1px',
-                background: '#ffb400',
-                border: theme === 'amber' ? '2px solid #fff' : 'none',
-                cursor: 'pointer',
-              }}
-            />
-            <button
-              onClick={() => setTheme('cyan')}
-              title="Cyber Cyan Palette"
-              style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '1px',
-                background: '#00e5ff',
-                border: theme === 'cyan' ? '2px solid #fff' : 'none',
-                cursor: 'pointer',
-              }}
-            />
-            <button
-              onClick={() => setTheme('emerald')}
-              title="Neon Emerald Palette"
-              style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '1px',
-                background: '#10b981',
-                border: theme === 'emerald' ? '2px solid #fff' : 'none',
-                cursor: 'pointer',
-              }}
-            />
-          </div>
-
-          {/* FAQ / Manual */}
+          {/* Reference Manual */}
           <button
             onClick={() => setFaqOpen(true)}
             title="Reference Manual"
-            style={{
-              padding: '0.3rem 0.6rem',
-              fontSize: '0.72rem',
-              fontFamily: 'var(--font-mono)',
-              borderRadius: '2px',
-              border: '1px solid var(--border-subtle)',
-              background: '#121824',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-            }}
+            className="btn-secondary"
+            style={{ padding: '0.25rem 0.55rem', fontSize: '0.7rem' }}
           >
-            <IconBook size={12} />
+            <IconBook size={11} />
             <span>MANUAL</span>
           </button>
 
@@ -285,35 +246,24 @@ const App: React.FC = () => {
           <button
             onClick={() => window.print()}
             title="Generate Audit Log Printout"
-            style={{
-              padding: '0.3rem 0.6rem',
-              fontSize: '0.72rem',
-              fontFamily: 'var(--font-mono)',
-              borderRadius: '2px',
-              border: '1px solid var(--border-subtle)',
-              background: '#121824',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-            }}
+            className="btn-secondary"
+            style={{ padding: '0.25rem 0.55rem', fontSize: '0.7rem' }}
           >
-            <IconPrint size={12} />
-            <span>AUDIT REPORT</span>
+            <IconPrint size={11} />
+            <span>AUDIT</span>
           </button>
         </div>
       </header>
 
-      {/* Main Body */}
+      {/* Main Layout Body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar Navigation */}
+        {/* Minimalist Pure Black Sidebar */}
         <nav
           className="print-hide"
           style={{
-            width: '230px',
-            padding: '1rem',
-            background: 'var(--bg-surface)',
+            width: '220px',
+            padding: '1rem 0.85rem',
+            background: '#050505',
             borderRight: '1px solid var(--border-subtle)',
             display: 'flex',
             flexDirection: 'column',
@@ -322,24 +272,24 @@ const App: React.FC = () => {
             overflowY: 'auto',
           }}
         >
-          {/* Subsystem Heartbeat Box */}
-          <div style={{ padding: '0.6rem 0.75rem', background: '#090d14', borderRadius: '2px', border: '1px solid var(--border-subtle)', fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>
+          {/* Backend Status Box */}
+          <div style={{ padding: '0.55rem 0.7rem', background: '#0a0a0a', borderRadius: '2px', border: '1px solid var(--border-subtle)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>FASTAPI SERVER:</span>
-              <span style={{ color: health ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+              <span style={{ color: 'var(--text-muted)' }}>FASTAPI:</span>
+              <span style={{ color: health ? '#10b981' : '#ef4444', fontWeight: 600 }}>
                 {health ? '[ONLINE]' : '[OFFLINE]'}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
               <span>CDM STREAM:</span>
-              <span style={{ color: health?.replay_running ? 'var(--accent-primary)' : 'var(--text-dim)', fontWeight: 600 }}>
-                {health?.replay_running ? 'ACTIVE' : 'STANDBY'}
+              <span style={{ color: health?.replay_running ? '#ffffff' : 'var(--text-dim)', fontWeight: 600 }}>
+                {health?.replay_running ? 'STREAMING' : 'STANDBY'}
               </span>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          {/* Nav Items */}
+          <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
             {navItems.map((item) => (
               <li key={item.to}>
                 <NavLink
@@ -347,16 +297,17 @@ const App: React.FC = () => {
                   style={({ isActive }) => ({
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.6rem',
-                    padding: '0.55rem 0.75rem',
+                    gap: '0.55rem',
+                    padding: '0.5rem 0.7rem',
                     borderRadius: '2px',
-                    color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    background: isActive ? '#141a26' : 'transparent',
-                    borderLeft: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                    color: isActive ? '#ffffff' : 'var(--text-muted)',
+                    background: isActive ? '#141414' : 'transparent',
+                    borderLeft: isActive ? '2px solid #ffffff' : '2px solid transparent',
                     textDecoration: 'none',
-                    fontSize: '0.78rem',
+                    fontSize: '0.75rem',
                     fontFamily: 'var(--font-mono)',
                     fontWeight: isActive ? 600 : 400,
+                    transition: 'all 0.12s ease',
                   })}
                 >
                   <span style={{ display: 'flex', color: 'inherit' }}>{item.icon}</span>
@@ -366,10 +317,10 @@ const App: React.FC = () => {
             ))}
           </ul>
 
-          {/* Stream Controller */}
-          <div style={{ marginTop: 'auto', padding: '0.75rem', background: '#090d14', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
+          {/* Telemetry Stream Replay Controller */}
+          <div style={{ marginTop: 'auto', padding: '0.75rem', background: '#0a0a0a', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', fontWeight: 600 }}>
+              <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.04em' }}>
                 TELEMETRY REPLAY
               </span>
               {loadingAction && <span className="radar-spinner" style={{ width: '10px', height: '10px' }} />}
@@ -379,68 +330,31 @@ const App: React.FC = () => {
               <button
                 onClick={handleStart}
                 disabled={loadingAction || health?.replay_running}
-                style={{
-                  flex: 1,
-                  padding: '0.4rem',
-                  fontSize: '0.72rem',
-                  fontFamily: 'var(--font-mono)',
-                  borderRadius: '2px',
-                  border: 'none',
-                  background: health?.replay_running ? '#16222f' : '#10b981',
-                  color: health?.replay_running ? '#64748b' : '#000',
-                  cursor: health?.replay_running ? 'not-allowed' : 'pointer',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.3rem',
-                }}
+                className="btn-primary"
+                style={{ flex: 1, padding: '0.35rem 0.4rem', fontSize: '0.7rem' }}
+                title="Start synthetic CDM playback"
               >
-                <IconPlay size={9} color={health?.replay_running ? '#64748b' : '#000'} />
+                <IconPlay size={8} />
                 <span>START</span>
               </button>
               <button
                 onClick={handleStop}
                 disabled={loadingAction || !health?.replay_running}
-                style={{
-                  flex: 1,
-                  padding: '0.4rem',
-                  fontSize: '0.72rem',
-                  fontFamily: 'var(--font-mono)',
-                  borderRadius: '2px',
-                  border: 'none',
-                  background: health?.replay_running ? '#ef4444' : '#1c1518',
-                  color: health?.replay_running ? '#fff' : '#64748b',
-                  cursor: !health?.replay_running ? 'not-allowed' : 'pointer',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.3rem',
-                }}
+                className="btn-secondary"
+                style={{ flex: 1, padding: '0.35rem 0.4rem', fontSize: '0.7rem' }}
+                title="Pause playback"
               >
-                <IconPause size={9} color={health?.replay_running ? '#fff' : '#64748b'} />
+                <IconPause size={8} />
                 <span>PAUSE</span>
               </button>
               <button
                 onClick={() => setConfirmResetOpen(true)}
                 disabled={loadingAction}
-                style={{
-                  padding: '0.4rem 0.55rem',
-                  fontSize: '0.72rem',
-                  fontFamily: 'var(--font-mono)',
-                  borderRadius: '2px',
-                  border: '1px solid var(--border-strong)',
-                  background: '#151b24',
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                title="Reset Replay Stream Buffer"
+                className="btn-secondary"
+                style={{ padding: '0.35rem 0.5rem', fontSize: '0.7rem' }}
+                title="Reset stream pipeline to step 1"
               >
-                <IconReset size={10} />
+                <IconReset size={9} />
               </button>
             </div>
 
@@ -450,9 +364,9 @@ const App: React.FC = () => {
                 value={replaySpeed}
                 onChange={(e) => setReplaySpeed(Number(e.target.value))}
                 style={{
-                  background: '#121824',
+                  background: '#050505',
                   color: 'var(--text-primary)',
-                  border: '1px solid var(--border-strong)',
+                  border: '1px solid var(--border-default)',
                   borderRadius: '2px',
                   padding: '0.15rem 0.35rem',
                   fontSize: '0.68rem',
@@ -470,42 +384,24 @@ const App: React.FC = () => {
           </div>
         </nav>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile Nav Drawer */}
         {mobileMenuOpen && (
           <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 1000,
-              background: 'rgba(0, 0, 0, 0.85)',
-              display: 'flex',
-            }}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0, 0, 0, 0.9)', display: 'flex' }}
             onClick={() => setMobileMenuOpen(false)}
           >
             <div
-              style={{
-                width: '240px',
-                background: 'var(--bg-surface-elevated)',
-                padding: '1.25rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-              }}
+              style={{ width: '240px', background: '#0e0e0e', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}
               onClick={(e) => e.stopPropagation()}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
-                <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--accent-primary)' }}>
+                <span style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#fff' }}>
                   NAVIGATION
                 </span>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', cursor: 'pointer' }}
-                >
-                  ✕
-                </button>
+                <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', cursor: 'pointer' }}>✕</button>
               </div>
 
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 {navItems.map((item) => (
                   <li key={item.to}>
                     <NavLink
@@ -517,10 +413,10 @@ const App: React.FC = () => {
                         gap: '0.5rem',
                         padding: '0.55rem 0.75rem',
                         borderRadius: '2px',
-                        color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                        background: isActive ? '#141a26' : '#090d14',
+                        color: isActive ? '#ffffff' : 'var(--text-muted)',
+                        background: isActive ? '#1a1a1a' : '#080808',
                         textDecoration: 'none',
-                        fontSize: '0.8rem',
+                        fontSize: '0.78rem',
                         fontFamily: 'var(--font-mono)',
                       })}
                     >
@@ -534,14 +430,36 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Main Content Viewport */}
+        {/* Main Content Viewport with Centered Container and Reserved Clearance */}
         <main
           id="main-content"
           ref={mainRef}
           onScroll={handleScroll}
-          style={{ flex: 1, padding: '1.25rem', overflow: 'auto', background: 'var(--bg-primary)', position: 'relative' }}
+          style={{
+            flex: 1,
+            padding: '1.25rem 1.75rem 4.5rem 1.75rem',
+            overflowY: 'auto',
+            background: 'transparent',
+            position: 'relative',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'contain',
+            scrollBehavior: 'smooth',
+          }}
         >
-          <Outlet />
+          <div className="console-container">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.16, ease: 'easeOut' }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
           {/* Floating Scroll to Top */}
           <button
@@ -554,20 +472,20 @@ const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Flight Operations Desk */}
+      {/* Docked Corner Operations Desk (Does NOT overlap content) */}
       <SupportDesk />
 
-      {/* Local Storage Telemetry Consent Banner */}
+      {/* Privacy Consent Banner */}
       <CookieBanner />
 
-      {/* Reference Manual FAQ Modal */}
+      {/* Reference Manual Modal */}
       <FaqModal isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
 
-      {/* Confirmation Modal */}
+      {/* Reinitialization Modal */}
       <ConfirmModal
         isOpen={confirmResetOpen}
         title="REINITIALIZE STREAM PIPELINE"
-        message="Resetting the stream will wipe in-memory telemetry buffers and reset synthetic CDM clock tracking to step 0. Confirm action?"
+        message="Resetting the stream will wipe in-memory telemetry buffers and reset synthetic CDM clock tracking to step 1. Confirm action?"
         confirmLabel="RESET"
         isDestructive={true}
         onConfirm={handleConfirmReset}

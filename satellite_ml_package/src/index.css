@@ -1,54 +1,72 @@
 /* ==============================================================================
    ESA Conjunction Assessment & Mission Operations Console
-   Aerospace Engineering Design System (Zero-Vibecoded Standard)
+   Precision Design System - Pure Black & Neutral Palette with Risk-Only Telemetry
    ============================================================================== */
 
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
 :root {
-  /* High-Contrast Technical Color Tokens */
-  --bg-primary: #07090e;
-  --bg-surface: #0e121a;
-  --bg-surface-elevated: #151a24;
-  --bg-panel: #111621;
+  /* ── Pure Black & Neutral Surfaces ───────────────────────────────────────── */
+  --bg-black: #000000;
+  --bg-primary: #000000;
+  --bg-surface: #0a0a0a;
+  --bg-surface-elevated: #111111;
+  --bg-surface-hover: #181818;
+  --bg-panel: #0d0d0d;
 
-  /* Crisp High-Contrast Typography */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  /* ── Neutral Text Scale ──────────────────────────────────────────────────── */
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-muted: #888888;
+  --text-dim: #555555;
+  --text-subtle: #333333;
 
-  /* Functional Telemetry Status Indicators (Not Decorative Aesthetics) */
-  --accent-primary: #ffb400;
-  --accent-amber: #ffb400;
-  --accent-cyan: #38bdf8;
+  /* ── 1px Structural Borders (White at 8% to 15% opacity) ─────────────────── */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --border-focus: rgba(255, 255, 255, 0.65);
+
+  /* ── Risk Telemetry ONLY (Strictly HIGH / MEDIUM / LOW) ──────────────────── */
+  --risk-high: #ef4444;
+  --risk-high-bg: rgba(239, 68, 68, 0.12);
+  --risk-high-border: rgba(239, 68, 68, 0.35);
+
+  --risk-med: #f59e0b;
+  --risk-med-bg: rgba(245, 158, 11, 0.12);
+  --risk-med-border: rgba(245, 158, 11, 0.35);
+
+  --risk-low: #10b981;
+  --risk-low-bg: rgba(16, 185, 129, 0.12);
+  --risk-low-border: rgba(16, 185, 129, 0.35);
+
+  /* Legacy variable mappings (for zero breakages in child components) */
+  --accent-primary: #ffffff;
+  --accent-amber: #f59e0b;
+  --accent-cyan: #ffffff;
   --accent-emerald: #10b981;
   --accent-rose: #ef4444;
 
-  /* Sharp Industrial 1px Borders */
-  --border-subtle: #1e2634;
-  --border-strong: #2d3848;
-  --border-hairline: 1px solid #1e2634;
+  /* ── Typography Stacks ───────────────────────────────────────────────────── */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
 
-  /* Typography Stacks (No Generic Inter, No Space Grotesk, No Serifs) */
-  --font-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', Consolas, monospace;
+  /* ── Layout Scale ────────────────────────────────────────────────────────── */
+  --max-content-width: 1440px;
 }
 
-/* Theme: Cyber Cyan */
-[data-theme='cyan'] {
-  --bg-primary: #05080e;
-  --bg-surface: #0a111c;
-  --bg-surface-elevated: #101a2b;
-  --bg-panel: #0d1524;
-  --accent-primary: #00e5ff;
-}
-
-/* Theme: Neon Emerald */
-[data-theme='emerald'] {
-  --bg-primary: #040907;
-  --bg-surface: #08140f;
-  --bg-surface-elevated: #0d1e17;
-  --bg-panel: #0a1812;
-  --accent-primary: #10b981;
+/* Base scale reduction: 13.6px is exactly 85% of standard 16px (-15% zoom fix) */
+html {
+  font-size: 13.6px;
+  scroll-behavior: smooth;
+  background-color: #000000;
 }
 
 /* Global Resets */
@@ -61,30 +79,50 @@
 }
 
 html, body, #root {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
-  background: var(--bg-primary);
+  background-color: #000000;
   color: var(--text-primary);
-  font-family: var(--font-ui);
-  overflow: hidden;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* High-Precision Technical Scrollbars */
+/* Subtle, Faint Pure Black Grid + Soft Radial Vignette */
+body {
+  background-color: #000000;
+  background-image:
+    radial-gradient(ellipse 90% 65% at 50% -5%, rgba(255, 255, 255, 0.035), transparent 75%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
+  background-position: center, 0 0, 0 0;
+  background-attachment: fixed;
+}
+
+/* Tabular Numbers for figures, metrics, timestamps, and table figures */
+.tabular-nums,
+table,
+.mono-num,
+[data-tnum] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Minimalist Precision Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
+  background: var(--border-default);
   border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
+  background: var(--border-strong);
 }
 
 /* Accessible Skip Link */
@@ -92,23 +130,23 @@ html, body, #root {
   position: absolute;
   top: -100px;
   left: 1rem;
-  background: var(--accent-primary);
-  color: #000;
+  background: #ffffff;
+  color: #000000;
   font-weight: 700;
   font-family: var(--font-mono);
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 0px;
   z-index: 10000;
   text-decoration: none;
-  font-size: 0.8rem;
-  transition: top 0.1s ease;
+  font-size: 0.75rem;
+  transition: top 0.15s ease;
 }
 .skip-link:focus {
   top: 1rem;
   outline: 2px solid #fff;
 }
 
-/* Scroll Progress Bar (Solid Functional Line, No Purple/Blue Gradient) */
+/* Subtle Neutral Scroll Progress Bar */
 .scroll-progress-container {
   position: fixed;
   top: 0;
@@ -121,144 +159,166 @@ html, body, #root {
 }
 .scroll-progress-fill {
   height: 100%;
-  background: var(--accent-primary);
+  background: #ffffff;
   transition: width 0.05s linear;
 }
 
-/* Sticky Headers (Solid Opaque, No Frosted Glassmorphism) */
-.sticky-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--bg-surface-elevated);
+/* Centered Console Layout Container */
+.console-container {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  width: 100%;
 }
 
-/* Scroll to Top Button (Precise Angular Tooling) */
-.scroll-top-btn {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 36px;
-  height: 36px;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-strong);
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 900;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.1s ease, border-color 0.1s ease;
-}
-.scroll-top-btn.visible {
-  opacity: 1;
-  visibility: visible;
-}
-.scroll-top-btn:hover {
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
+/* Pulse Animation for Critical HIGH Risk Badges */
+@keyframes highRiskPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
 }
 
-/* Telemetry Status Beacon */
+.risk-badge-high {
+  animation: highRiskPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Telemetry Beacon */
 @keyframes telemetryPulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  50% { opacity: 0.3; }
 }
 
 .live-beacon {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   background: #10b981;
   display: inline-block;
-  animation: telemetryPulse 1.6s infinite;
+  border-radius: 50%;
+  animation: telemetryPulse 1.8s infinite;
 }
 
-/* Tactical Loading Spinner */
+/* Neutral Tactical Buttons */
+.btn-primary {
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  border: 1px solid #ffffff;
+  border-radius: 2px;
+  padding: 0.45rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #e5e5e5;
+  border-color: #e5e5e5;
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #0a0a0a;
+  color: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: 2px;
+  padding: 0.45rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: #141414;
+}
+.btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Precision Radar Spinner */
 @keyframes spinRadar {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
 .radar-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--border-subtle);
-  border-top-color: var(--accent-primary);
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--border-subtle);
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: spinRadar 0.65s linear infinite;
   display: inline-block;
 }
 
-/* Snappy, Tactical Button Hover (No Gimmicky Fades) */
-button, select, input {
-  font-family: inherit;
-  transition: background 0.08s ease, border-color 0.08s ease, color 0.08s ease;
-}
-button:hover {
-  border-color: var(--border-strong);
+/* Micro-interaction Row Flash on Update */
+@keyframes rowFlash {
+  0% { background-color: rgba(255, 255, 255, 0.08); }
+  100% { background-color: transparent; }
 }
 
-/* Monospace Utilities */
-.font-mono {
-  font-family: var(--font-mono);
+.row-updated {
+  animation: rowFlash 1s ease-out;
 }
 
-/* Clean Print Stylesheet */
+/* Accessible Focus Rings */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+/* Respect Prefers Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print Styles */
 @media print {
   body, html, #root {
     background: #ffffff !important;
     color: #000000 !important;
     overflow: visible !important;
     height: auto !important;
-    font-family: 'Courier New', monospace !important;
+    font-size: 12pt !important;
   }
-
-  nav,
-  .print-hide,
-  .scroll-top-btn,
-  .scroll-progress-container,
-  .cookie-banner,
-  .mission-support-drawer,
-  button,
-  select,
-  input {
+  nav, .print-hide, .skip-link, .scroll-progress-container, button {
     display: none !important;
   }
-
   main {
     padding: 0 !important;
-    margin: 0 !important;
     width: 100% !important;
-    overflow: visible !important;
   }
-
   table {
     border-collapse: collapse !important;
     width: 100% !important;
     color: #000000 !important;
   }
-
   th, td {
-    border: 1px solid #444444 !important;
-    padding: 6px 8px !important;
-    color: #000000 !important;
-    background: transparent !important;
-  }
-
-  th {
-    background-color: #eeeeee !important;
-    font-weight: bold !important;
-  }
-
-  main::before {
-    content: "EUROPEAN SPACE AGENCY (ESA) - CONJUNCTION RISK ASSESSMENT AUDIT LOG";
-    display: block;
-    font-size: 13pt;
-    font-weight: bold;
-    margin-bottom: 10pt;
-    border-bottom: 1.5pt solid #000;
-    padding-bottom: 3pt;
+    border: 1px solid #333333 !important;
+    padding: 4px 6px !important;
   }
 }

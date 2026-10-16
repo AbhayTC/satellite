@@ -103,7 +103,7 @@ PayloadType = StateUpdatePayload | RiskAlertPayload | ManeuverDecisionPayload
 class StreamMessage(BaseModel):
     schema_version: str = "1.0"
     message_id: str = Field(default_factory=_new_uuid)
-    msg_type: Literal["STATE_UPDATE", "RISK_ALERT", "MANEUVER_DECISION"]
+    msg_type: Literal["STATE_UPDATE", "RISK_ALERT", "MANEUVER_DECISION", "PIPELINE_RESET"]
     event_id: str
     emitted_at: str = Field(default_factory=_now_iso)
     source_agent: Literal["ingestion", "tracking", "risk", "maneuver"]

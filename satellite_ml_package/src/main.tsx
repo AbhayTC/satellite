@@ -1,8 +1,9 @@
 // src/main.tsx
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
+import LandingPage from './components/LandingPage';
 import ConstellationView from './components/ConstellationView';
 import ConjunctionTable from './components/ConjunctionTable';
 import EventDetail from './components/EventDetail';
@@ -14,8 +15,11 @@ createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<App />}>
-          <Route index element={<Navigate to="constellation" replace />} />
+        {/* Landing Page full scroll-story */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Operational Mission Control Shell */}
+        <Route element={<App />}>
           <Route path="constellation" element={<ConstellationView />} />
           <Route path="table" element={<ConjunctionTable />} />
           <Route path="event/:eventId" element={<EventDetail />} />

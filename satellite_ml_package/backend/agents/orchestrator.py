@@ -149,4 +149,14 @@ class ReplayOrchestrator:
     async def reset(self, source: Optional[str] = None, speed: Optional[float] = None) -> None:
         await self.stop()
         self.store.clear()
+        try:
+            reset_msg = StreamMessage(
+                msg_type="PIPELINE_RESET",
+                event_id="0",
+                source_agent="ingestion",
+                payload={"status": "reset"},
+            )
+            await self._broadcast(reset_msg.model_dump())
+        except Exception as exc:
+            logger.warning("Failed to broadcast reset message: %s", exc)
         await self.start(source=source, speed=speed)
